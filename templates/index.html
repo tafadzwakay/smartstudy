@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartStudy AI Tutor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            justify-content: flex-end;
+        }
+        
+        .message.assistant {
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .user .message-content {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+        
+        .assistant .message-content {
+            background: #f0f0f0;
+            color: #333;
+            border-bottom-left-radius: 0;
+        }
+        
+        .sources {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 3px solid #667eea;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .sources strong {
+            color: #333;
+        }
+        
+        .source-item {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-radius: 4px;
+        }
+        
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-area input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+        
+        .input-area button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .input-area button:hover {
+            background: #764ba2;
+        }
+        
+        .input-area button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .sidebar-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-info h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .sidebar-info ul {
+            list-style: none;
+            color: #666;
+        }
+        
+        .sidebar-info li {
+            padding: 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 SmartStudy AI Tutor</h1>
+            <p>Your intelligent study companion</p>
+        </div>
+        
+        <div class="chat-box" id="chatBox"></div>
+        
+        <div class="sidebar-info">
+            <h4>📄 Loaded Documents:</h4>
+            <ul id="filesList">
+                <li>Loading...</li>
+            </ul>
+        </div>
+
+        <div style="padding: 10px; border-top: 1px solid #eee;">
+    <input type="file" id="studyFile">
+    <button onclick="uploadFile()" style="margin-left:10px;">
+        Upload Study Material
+    </button>
+</div>
+        
+        <div class="input-area">
+            
+            <!-- 🎤 VOICE BUTTONS -->
+            <button onclick="startRecording()">🎤 Speak</button>
+            <button onclick="stopRecording()">⏹ Stop</button>
+
+            <!-- TEXT INPUT -->
+            <input 
+                type="text" 
+                id="questionInput" 
+                placeholder="Ask about your study materials..."
+                autocomplete="off"
+            >
+            <button id="sendBtn" onclick="sendQuestion()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const questionInput = document.getElementById('questionInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const filesList = document.getElementById('filesList');
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        async function startRecording() {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            mediaRecorder = new MediaRecorder(stream)
+            audioChunks = [];
+
+
+           mediaRecorder.ondataavailable = event => {
+            audioChunks.push(event.data);
+            };
+
+            mediaRecorder.start();
+            console.log("Recording started...");
+            }
+
+            async function stopRecording() {
+    mediaRecorder.stop();
+
+    mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+        let formData = new FormData();
+        formData.append("file", audioBlob, "voice.webm");
+
+        let response = await fetch("/api/voice", {
+            method: "POST",
+            body: formData
+        });
+
+        let data = await response.json();
+
+        addMessage("user", data.text);
+        addMessage("assistant", data.answer);
+
+        if (data.audio) {
+            let audio = new Audio(data.audio);
+            audio.play();
+        }
+    };
+}
+
+
+        function typeMessage(role, message, speed = 40) {
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+
+    div.appendChild(contentDiv);
+    chatBox.appendChild(div);
+
+    let i = 0;
+
+    function typeChar() {
+        if (i < message.length) {
+            contentDiv.innerHTML += message.charAt(i);
+            i++;
+            setTimeout(typeChar, speed);
+        }
+    }
+
+    typeChar();
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+        
+        // Load files on startup
+        window.addEventListener('load', () => {
+    loadFiles();
+    initializeSystem();
+
+    const hour = new Date().getHours();
+
+    let greeting = "Hello 👋";
+    if (hour < 12) greeting = "Good morning ☀️";
+    else if (hour < 18) greeting = "Good afternoon 🌤️";
+    else greeting = "Good evening 🌙";
+
+    const message = `${greeting} I'm your SmartStudy AI Tutor. What are we learning today?`;
+
+    setTimeout(() => {
+        typeMessage("assistant", message, 25);
+    }, 800);
+});
+        
+        // Send on Enter key
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendQuestion();
+            }
+        });
+        
+        function loadFiles() {
+            fetch('/api/files')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.files.length === 0) {
+                        filesList.innerHTML = '<li>No PDFs found in data folder</li>';
+                    } else {
+                        filesList.innerHTML = data.files
+                            .map(f => `<li>✓ ${f}</li>`)
+                            .join('');
+                    }
+                })
+                .catch(err => console.error('Error loading files:', err));
+        }
+        
+        function initializeSystem() {
+            fetch('/api/initialize', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.success) {
+                        addMessage('assistant', `Error: ${data.message}`);
+                    }
+                })
+                .catch(err => {
+                    addMessage('assistant', `Error initializing system: ${err.message}`);
+                });
+        }
+
+      
+        async function uploadFile() {
+    let fileInput = document.getElementById("studyFile");
+    let file = fileInput.files[0];
+
+    if (!file) {
+        alert("Please select a file first");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append("file", file);
+
+    let response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    let data = await response.json();
+
+    alert(data.message || data.error);
+
+    // refresh file list after upload
+    loadFiles();
+
+     fileInput.value = "";
+}
+        function sendQuestion() {
+            const question = questionInput.value.trim();
+            
+            if (!question) return;
+        
+        function typeMessage(role, message, speed = 40) {
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+
+    div.appendChild(contentDiv);
+    chatBox.appendChild(div);
+
+    let i = 0;
+
+    function typeChar() {
+        if (i < message.length) {
+            contentDiv.innerHTML += message.charAt(i);
+            i++;
+            setTimeout(typeChar, speed);
+        }
+    }
+
+    typeChar();
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+            // Add user message
+            addMessage('user', question);
+            questionInput.value = '';
+            sendBtn.disabled = true;
+            
+            // Add loading indicator
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `<div id="${loadingId}" class="message assistant"><div class="message-content loading">Thinking...</div></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            // Send request
+            fetch('/api/ask', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question })
+            })
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById(loadingId).remove();
+                
+                if (data.error) {
+                    addMessage('assistant', `Error: ${data.error}`);
+                } else {
+                    addMessage('assistant', data.answer, data.sources);
+                }
+                
+                sendBtn.disabled = false;
+                questionInput.focus();
+            })
+            .catch(err => {
+                document.getElementById(loadingId).remove();
+                addMessage('assistant', `Error: ${err.message}`);
+                sendBtn.disabled = false;
+            });
+        }
+        
+        function addMessage(role, content, sources = null) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            
+            let html = `<div class="message-content">${escapeHtml(content)}`;
+            
+            if (sources && sources.length > 0) {
+                html += '<div class="sources"><strong>📚 Sources:</strong>';
+                sources.forEach((s, i) => {
+                    const file = s.source_file || 'Unknown';
+                    const page = s.page || '?';
+                    html += `<div class="source-item">[${i+1}] ${file} - Page ${page}</div>`;
+                });
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            div.innerHTML = html;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

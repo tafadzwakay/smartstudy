@@ -1,0 +1,63 @@
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+
+# ── Virtual Environment ───────────────────────────────────────
+venv/
+env/
+.env/
+.venv/
+
+# ── Environment Variables (NEVER commit these) ────────────────
+.env
+.env.local
+.env.production
+*.env
+
+# ── Django Specific ───────────────────────────────────────────
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# ── Static Files (collected by collectstatic) ─────────────────
+staticfiles/
+static_root/
+
+# ── Database ──────────────────────────────────────────────────
+*.db
+*.sqlite3
+
+# ── Migrations (optional — most teams keep these) ─────────────
+# Uncomment the line below ONLY if you want to exclude migrations
+# */migrations/
+
+# ── Testing ───────────────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
+coverage.xml
+
+# ── IDE / Editor ──────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Celery ────────────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+
+# ── Secret Key / Credentials ──────────────────────────────────
+secrets.json
+credentials.json

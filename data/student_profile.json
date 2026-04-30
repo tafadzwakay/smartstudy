@@ -1,0 +1,11 @@
+{
+    "name": "default_student",
+    "subjects": {
+        "General": {
+            "confidence": 1,
+            "mistakes": 0
+        }
+    },
+    "preferred_style": "examples-first",
+    "recent_topics": []
+}
