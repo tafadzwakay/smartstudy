@@ -1,0 +1,148 @@
+{
+    "username": "amanda",
+    "name": "Amanda",
+    "grade": "Form 3",
+    "role": "student",
+    "preferred_style": "examples-first",
+    "subjects": {
+        "General": {
+            "confidence": 1,
+            "mistakes": 0
+        },
+        "History": {
+            "confidence": 0.55,
+            "mistakes": 0
+        },
+        "Biology": {
+            "confidence": 0.55,
+            "mistakes": 0
+        }
+    },
+    "recent_topics": [
+        "Explain how smart study addresses the challenges faced by Rose Bob in students in preparing for ZIPSEC examinations. To repeat, explain how smart study addresses the challenges faced by Rose Bob in students in preparing for ZIPSEC examinations.",
+        "List the four main steps. List the four main steps you would follow when writing a summary. I repeat, list the four main steps you would follow when writing a summary.",
+        "Outline the role of Stromach in digestion. Mentioning the enzymes and the substances involved, I repeat. Outline the role of the Stromach in digestion. Mentioning the enzymes and the substances involved.",
+        "Explain how the root hair cell is adapted for absorbing water and minerals. Explain how the root hair cell is adapted for absorbing water and minerals.",
+        "What is a retrieval Augmented Generation? And how does Smart Study use it to improve accuracy of responses? I repeat, what is a retrieval Augmented Generation? And how does Smart Study use it to improve accuracy of responses?",
+        "Explain how smart study addresses the challenges faced by rural Zimbabwean students in preparing for Zimsec examinations. I repeat, explain how smart study addresses the challenges faced by rural Zimbabwean students in preparing for Zimsec examinations.",
+        "Hi. Explain how smart study addresses the challenges faced by symbiotic students in preparing for synemiotic examinations.",
+        "Explain how smart study. Hello. Hello? Hopefully.",
+        "What is functional modeling?",
+        "Hi, Smud Study. What is Functional Modeling?"
+    ],
+    "activity": [
+        {
+            "question": "Explain how smart study addresses the challenges faced by Rose Bob in students in preparing for ZIPSEC examinations. To repeat, explain how smart study addresses the challenges faced by Rose Bob in students in preparing for ZIPSEC examinations.",
+            "subject": "General",
+            "timestamp": "2026-06-07 12:41"
+        },
+        {
+            "question": "List the four main steps. List the four main steps you would follow when writing a summary. I repeat, list the four main steps you would follow when writing a summary.",
+            "subject": "General",
+            "timestamp": "2026-06-07 07:22"
+        },
+        {
+            "question": "Outline the role of Stromach in digestion. Mentioning the enzymes and the substances involved, I repeat. Outline the role of the Stromach in digestion. Mentioning the enzymes and the substances involved.",
+            "subject": "General",
+            "timestamp": "2026-06-07 07:20"
+        },
+        {
+            "question": "Explain how the root hair cell is adapted for absorbing water and minerals. Explain how the root hair cell is adapted for absorbing water and minerals.",
+            "subject": "Biology",
+            "timestamp": "2026-06-07 07:19"
+        },
+        {
+            "question": "What is a retrieval Augmented Generation? And how does Smart Study use it to improve accuracy of responses? I repeat, what is a retrieval Augmented Generation? And how does Smart Study use it to improve accuracy of responses?",
+            "subject": "General",
+            "timestamp": "2026-06-07 07:17"
+        },
+        {
+            "question": "Explain how smart study addresses the challenges faced by rural Zimbabwean students in preparing for Zimsec examinations. I repeat, explain how smart study addresses the challenges faced by rural Zimbabwean students in preparing for Zimsec examinations.",
+            "subject": "History",
+            "timestamp": "2026-06-07 07:15"
+        },
+        {
+            "question": "Hi. Explain how smart study addresses the challenges faced by symbiotic students in preparing for synemiotic examinations.",
+            "subject": "General",
+            "timestamp": "2026-06-07 07:14"
+        },
+        {
+            "question": "Explain how smart study. Hello. Hello? Hopefully.",
+            "subject": "General",
+            "timestamp": "2026-06-07 07:09"
+        },
+        {
+            "question": "What is functional modeling?",
+            "subject": "General",
+            "timestamp": "2026-06-07 05:45"
+        },
+        {
+            "question": "Hi, Smud Study. What is Functional Modeling?",
+            "subject": "General",
+            "timestamp": "2026-06-07 05:43"
+        },
+        {
+            "question": "What are the achievements of this mastery chatbot? What is it achieved? Explain its level, its level of a functionality please.",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:44"
+        },
+        {
+            "question": "What is the use case diagram? What is a use case diagram?",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:43"
+        },
+        {
+            "question": "What is smart study? Explain what the smart study chart but is all about. I repeat, what is smart study?",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:38"
+        },
+        {
+            "question": "Explain the system, the types of diagrams used in system modeling in chat pot in a smart study chat pot. Explain the types of diagrams used in system modeling the smart study chat pot.",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:37"
+        },
+        {
+            "question": "What is system modeling? What is system modeling and how does it relate to the smart study chatbot? What is system modeling and how does it relate to the smart study chatbot?",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:36"
+        },
+        {
+            "question": "What are sexual transmitted diseases? State the types of sexual transmitted diseases.",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:29"
+        },
+        {
+            "question": "What is fertilization? What is fertilization?",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:28"
+        },
+        {
+            "question": "What is the phone number for the quadratic equation? What is the formula for the quadratic equation?",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:27"
+        },
+        {
+            "question": "Hello, what is the quadratic equation? What is a quadratic equation? So state the formula for the quadratic equation. I repeat, state the formula for the quadratic equation.",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:25"
+        },
+        {
+            "question": "What is photosynthesis? Please explain what photosynthesis is.",
+            "subject": "General",
+            "timestamp": "2026-06-07 04:05"
+        }
+    ],
+    "notes": [],
+    "quizzes": [],
+    "chat_sessions": [],
+    "badges": [
+        "Consistent Learner",
+        "Starter",
+        "Top Performer"
+    ],
+    "streak": 0,
+    "last_active": null,
+    "last_sync": null,
+    "pending_sync": 1,
+    "sync_history": []
+}

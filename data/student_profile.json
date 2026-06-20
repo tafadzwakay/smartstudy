@@ -1,11 +1,159 @@
 {
-    "name": "default_student",
+    "username": "guest",
+    "name": "Learner",
+    "grade": "Form 1",
+    "role": "student",
+    "preferred_style": "examples-first",
     "subjects": {
         "General": {
             "confidence": 1,
             "mistakes": 0
+        },
+        "Mathematics": {
+            "confidence": 0.6500000000000001,
+            "mistakes": 0
+        },
+        "Biology": {
+            "confidence": 0.55,
+            "mistakes": 0
+        },
+        "History": {
+            "confidence": 0.55,
+            "mistakes": 0
         }
     },
-    "preferred_style": "examples-first",
-    "recent_topics": []
+    "recent_topics": [
+        "what is heritage in Zimbabwe?",
+        "what advice would you give to a student who is not perfoming well in mathemartics ? and advice?",
+        "your answer is wrong ,please solve the problem again",
+        "Solve for x and y:  { 2x+y=11 x\u2212y=1 \t\u200b,use substituition method.",
+        "what is the formula for the area of a circle?",
+        "generate a question using this formula and answer it ,show workings for each and every step.",
+        "define quadratic equations",
+        "Mathematics",
+        "what is the formula for quadratic equations?",
+        "what is heritage?"
+    ],
+    "activity": [
+        {
+            "question": "what is heritage in Zimbabwe?",
+            "subject": "History",
+            "timestamp": "2026-05-13 22:29"
+        },
+        {
+            "question": "what advice would you give to a student who is not perfoming well in mathemartics ? and advice?",
+            "subject": "Mathematics",
+            "timestamp": "2026-05-13 22:22"
+        },
+        {
+            "question": "your answer is wrong ,please solve the problem again",
+            "subject": "General",
+            "timestamp": "2026-05-13 22:16"
+        },
+        {
+            "question": "Solve for x and y:  { 2x+y=11 x\u2212y=1 \t\u200b,use substituition method.",
+            "subject": "General",
+            "timestamp": "2026-05-13 22:07"
+        },
+        {
+            "question": "what is the formula for the area of a circle?",
+            "subject": "General",
+            "timestamp": "2026-05-13 22:02"
+        },
+        {
+            "question": "generate a question using this formula and answer it ,show workings for each and every step.",
+            "subject": "General",
+            "timestamp": "2026-05-13 21:54"
+        },
+        {
+            "question": "define quadratic equations",
+            "subject": "General",
+            "timestamp": "2026-05-13 21:50"
+        },
+        {
+            "question": "Mathematics",
+            "subject": "Mathematics",
+            "timestamp": "2026-05-13 21:39"
+        },
+        {
+            "question": "what is the formula for quadratic equations?",
+            "subject": "General",
+            "timestamp": "2026-05-13 10:23"
+        },
+        {
+            "question": "what is heritage?",
+            "subject": "General",
+            "timestamp": "2026-05-13 02:03"
+        },
+        {
+            "question": "what is the smartstudy chatbot about?",
+            "subject": "General",
+            "timestamp": "2026-05-13 01:59"
+        },
+        {
+            "question": "what are real numbers?",
+            "subject": "General",
+            "timestamp": "2026-05-13 01:46"
+        },
+        {
+            "question": "what is heritage?",
+            "subject": "General",
+            "timestamp": "2026-05-13 01:21"
+        },
+        {
+            "question": "give the formula for the quadratic equation and a worked example",
+            "subject": "General",
+            "timestamp": "2026-05-13 00:36"
+        },
+        {
+            "question": "what is the smartstudy abou?t??",
+            "subject": "General",
+            "timestamp": "2026-05-12 15:08"
+        },
+        {
+            "question": "what are real numbers?",
+            "subject": "General",
+            "timestamp": "2026-05-12 15:03"
+        },
+        {
+            "question": "what is the formula for quadratic equations?",
+            "subject": "General",
+            "timestamp": "2026-05-12 14:51"
+        },
+        {
+            "question": "what is the formula for quadratic equations?",
+            "subject": "General",
+            "timestamp": "2026-05-12 14:50"
+        },
+        {
+            "question": "Hello. How are you?",
+            "subject": "General",
+            "timestamp": "2026-05-12 12:09"
+        },
+        {
+            "question": "hello,how are you?",
+            "subject": "General",
+            "timestamp": "2026-05-12 11:18"
+        }
+    ],
+    "notes": [],
+    "quizzes": [],
+    "chat_sessions": [],
+    "badges": [
+        "Consistent Learner",
+        "Starter",
+        "Top Performer"
+    ],
+    "streak": 0,
+    "last_active": null,
+    "last_sync": "2026-05-12 16:16",
+    "pending_sync": 0,
+    "sync_history": [
+        "2026-05-11 16:44",
+        "2026-05-11 16:49",
+        "2026-05-11 16:50",
+        "2026-05-11 16:50",
+        "2026-05-11 16:50",
+        "2026-05-12 16:16"
+    ]
 }

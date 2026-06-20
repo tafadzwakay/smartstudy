@@ -1,0 +1,44 @@
+{
+    "kiona": {
+        "password": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646",
+        "name": "Kiona Gavhumende",
+        "grade": "..",
+        "role": "admin",
+        "created_at": "2026-05-14 01:38"
+    },
+    "tafadzwa": {
+        "password": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646",
+        "name": "Tafadzwa Nhidza",
+        "grade": "..",
+        "role": "student",
+        "created_at": "2026-05-14 02:45"
+    },
+    "kiara": {
+        "password": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646",
+        "name": "Kiara Gavhumende",
+        "grade": "..",
+        "role": "teacher",
+        "created_at": "2026-05-14 02:59"
+    },
+    "kundai": {
+        "password": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646",
+        "name": "Kundai Nhidza",
+        "grade": "Form 4",
+        "role": "student",
+        "created_at": "2026-05-15 13:26"
+    },
+    "tatenda": {
+        "password": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646",
+        "name": "Tatenda",
+        "grade": "Form 4",
+        "role": "student",
+        "created_at": "2026-06-05 17:29"
+    },
+    "amanda": {
+        "password": "c775e7b757ede630cd0aa1113bd102661ab38829ca52a6422ab782862f268646",
+        "name": "Amanda",
+        "grade": "Form 3",
+        "role": "student",
+        "created_at": "2026-06-05 18:59"
+    }
+}

@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartStudy Quiz</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+    --bg: #060818;
+    --surface: #0e1225;
+    --surface2: #161a30;
+    --border: rgba(99,120,255,0.18);
+    --purple: #6378ff;
+    --purple2: #8b5cf6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --yellow: #f59e0b;
+    --text: #e8eaf6;
+    --muted: rgba(232,234,246,0.5);
+    --radius: 18px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+body::before {
+    content:'';
+    position:fixed;
+    top:-200px; left:-200px;
+    width:600px; height:600px;
+    background: radial-gradient(circle, rgba(99,120,255,0.12), transparent 70%);
+    pointer-events:none;
+}
+body::after {
+    content:'';
+    position:fixed;
+    bottom:-200px; right:-200px;
+    width:500px; height:500px;
+    background: radial-gradient(circle, rgba(139,92,246,0.1), transparent 70%);
+    pointer-events:none;
+}
+
+.topbar {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; gap:16px;
+    padding:12px 28px;
+    background: rgba(6,8,24,0.85);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+}
+.topbar-logo { font-size:15px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+.topbar-logo span { color:var(--purple); }
+.back-btn {
+    margin-left:auto;
+    background: var(--surface2);
+    border:1px solid var(--border);
+    color:var(--muted);
+    padding:7px 16px;
+    border-radius:10px;
+    font-size:13px;
+    cursor:pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+}
+.back-btn:hover { color:var(--text); border-color:var(--purple); }
+
+.container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 80px 24px 40px;
+}
+
+.screen { display:none; }
+.screen.active { display:block; animation: fadeUp 0.4s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── DASHBOARD ── */
+.dash-header { margin-bottom:32px; }
+.dash-header h1 { font-size:28px; font-weight:700; margin-bottom:6px; }
+.dash-header p { color:var(--muted); font-size:15px; }
+
+.stats-row {
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:14px;
+    margin-bottom:28px;
+}
+.stat-box {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+    text-align:center;
+}
+.stat-box .num { font-size:32px; font-weight:700; color:var(--purple); font-family:'DM Mono',monospace; }
+.stat-box .label { font-size:12px; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:.06em; }
+
+.weekly-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:28px;
+}
+.weekly-card h3 { font-size:15px; font-weight:600; margin-bottom:16px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+
+.bar-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.bar-day { font-size:12px; color:var(--muted); width:32px; }
+.bar-track { flex:1; height:8px; background:var(--surface2); border-radius:4px; overflow:hidden; }
+.bar-fill { height:100%; background:linear-gradient(90deg,var(--purple),var(--purple2)); border-radius:4px; transition:width 1s ease; }
+.bar-pct { font-size:12px; color:var(--muted); width:36px; text-align:right; font-family:'DM Mono',monospace; }
+
+.history-list { display:grid; gap:10px; margin-bottom:28px; max-height:280px; overflow-y:auto; }
+.history-item {
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 18px;
+}
+.history-item .hi-topic { font-size:14px; font-weight:600; }
+.history-item .hi-date { font-size:12px; color:var(--muted); margin-top:2px; }
+.badge-score {
+    font-family:'DM Mono',monospace;
+    font-size:13px; font-weight:600;
+    padding:5px 12px;
+    border-radius:8px;
+}
+.badge-score.good { background:rgba(34,197,94,0.12); color:var(--green); border:1px solid rgba(34,197,94,0.25); }
+.badge-score.mid  { background:rgba(245,158,11,0.12); color:var(--yellow); border:1px solid rgba(245,158,11,0.25); }
+.badge-score.low  { background:rgba(239,68,68,0.12); color:var(--red); border:1px solid rgba(239,68,68,0.25); }
+
+.start-btn {
+    width:100%; padding:17px;
+    background:linear-gradient(135deg,var(--purple),var(--purple2));
+    border:none; border-radius:var(--radius);
+    color:white; font-size:16px; font-weight:700;
+    cursor:pointer; font-family:'DM Sans',sans-serif;
+    transition:opacity 0.2s, transform 0.2s;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.start-btn:hover { opacity:0.9; transform:translateY(-1px); }
+
+/* ── LOADING ── */
+.loading-center {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:60vh; gap:20px;
+}
+.spinner {
+    width:52px; height:52px;
+    border:3px solid var(--surface2);
+    border-top-color:var(--purple);
+    border-radius:50%;
+    animation:spin 0.9s linear infinite;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.loading-text { font-size:15px; color:var(--muted); }
+
+/* ── QUIZ SCREEN ── */
+.quiz-progress-bar {
+    background:var(--surface2);
+    height:5px; border-radius:3px;
+    margin-bottom:16px; overflow:hidden;
+}
+.quiz-progress-fill {
+    height:100%;
+    background:linear-gradient(90deg,var(--purple),var(--purple2));
+    border-radius:3px;
+    transition:width 0.4s ease;
+}
+
+/* Dot navigator */
+.dot-nav {
+    display:flex; flex-wrap:wrap; gap:8px;
+    margin-bottom:18px; justify-content:center;
+}
+.dot {
+    width:32px; height:32px;
+    border-radius:50%;
+    border:1.5px solid var(--border);
+    background:var(--surface2);
+    color:var(--muted);
+    font-size:12px; font-weight:600;
+    cursor:pointer;
+    display:grid; place-items:center;
+    font-family:'DM Mono',monospace;
+    transition:all 0.2s;
+}
+.dot:hover { border-color:var(--purple); color:var(--text); }
+.dot.answered { background:rgba(99,120,255,0.2); border-color:var(--purple); color:var(--purple); }
+.dot.current  { background:var(--purple); border-color:var(--purple); color:white; }
+
+.quiz-meta {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px;
+}
+.quiz-counter { font-size:13px; color:var(--muted); font-family:'DM Mono',monospace; }
+.quiz-topic-tag {
+    font-size:12px; padding:4px 10px;
+    background:rgba(99,120,255,0.12);
+    border:1px solid rgba(99,120,255,0.25);
+    border-radius:6px; color:var(--purple);
+}
+
+.question-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:28px;
+    margin-bottom:20px;
+}
+.question-type {
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--muted); margin-bottom:12px;
+}
+.question-text { font-size:18px; font-weight:600; line-height:1.5; }
+
+.options-grid { display:grid; gap:10px; margin-top:22px; }
+.option-btn {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px;
+    background:var(--surface2);
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    color:var(--text);
+    font-size:14px; font-weight:500;
+    cursor:pointer;
+    text-align:left;
+    font-family:'DM Sans',sans-serif;
+    transition:all 0.2s;
+}
+.option-btn:hover { border-color:var(--purple); background:rgba(99,120,255,0.08); }
+.option-btn.selected { border-color:var(--purple); background:rgba(99,120,255,0.15); }
+.option-btn.selected .opt-letter { background:var(--purple); color:white; }
+.option-btn.correct { border-color:var(--green); background:rgba(34,197,94,0.08); }
+.option-btn.correct .opt-letter { background:rgba(34,197,94,0.2); color:var(--green); }
+.option-btn.wrong   { border-color:var(--red); background:rgba(239,68,68,0.08); }
+.option-btn.wrong .opt-letter   { background:rgba(239,68,68,0.2); color:var(--red); }
+.option-btn .opt-letter {
+    width:30px; height:30px;
+    background:rgba(99,120,255,0.12);
+    border-radius:8px;
+    display:grid; place-items:center;
+    font-size:13px; font-weight:700; color:var(--purple);
+    flex-shrink:0;
+    transition:all 0.2s;
+}
+
+.tf-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:22px; }
+.tf-btn {
+    padding:18px; border-radius:14px;
+    border:1.5px solid var(--border);
+    background:var(--surface2);
+    color:var(--text); font-size:15px; font-weight:600;
+    cursor:pointer; font-family:'DM Sans',sans-serif;
+    transition:all 0.2s;
+}
+.tf-btn:hover   { border-color:var(--purple); }
+.tf-btn.selected { border-color:var(--purple); background:rgba(99,120,255,0.15); color:var(--purple); }
+.tf-btn.correct  { border-color:var(--green); background:rgba(34,197,94,0.1); color:var(--green); }
+.tf-btn.wrong    { border-color:var(--red); background:rgba(239,68,68,0.1); color:var(--red); }
+
+.short-answer-area {
+    margin-top:20px;
+    display:flex; flex-direction:column; gap:12px;
+}
+.short-answer-area textarea {
+    background:var(--surface2);
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    padding:14px;
+    color:var(--text);
+    font-size:14px;
+    font-family:'DM Sans',sans-serif;
+    resize:none; outline:none;
+    transition:border-color 0.2s;
+    min-height:90px;
+}
+.short-answer-area textarea:focus { border-color:var(--purple); }
+
+/* Nav buttons row */
+.nav-row {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:4px;
+}
+.nav-row.single { grid-template-columns:1fr; }
+
+.prev-btn {
+    padding:14px;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    color:var(--muted); font-size:15px; font-weight:600;
+    cursor:pointer; font-family:'DM Sans',sans-serif;
+    transition:all 0.2s;
+}
+.prev-btn:hover { border-color:var(--purple); color:var(--text); }
+.prev-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+.next-btn {
+    padding:14px;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    color:var(--text); font-size:15px; font-weight:600;
+    cursor:pointer; font-family:'DM Sans',sans-serif;
+    transition:all 0.2s;
+}
+.next-btn:hover { border-color:var(--purple); background:rgba(99,120,255,0.06); }
+
+.submit-all-btn {
+    width:100%; padding:16px;
+    background:linear-gradient(135deg,var(--purple),var(--purple2));
+    border:none; border-radius:14px;
+    color:white; font-size:15px; font-weight:700;
+    cursor:pointer; font-family:'DM Sans',sans-serif;
+    transition:opacity 0.2s, transform 0.2s;
+    margin-top:12px;
+    display:none;
+}
+.submit-all-btn.show { display:block; }
+.submit-all-btn:hover { opacity:0.9; transform:translateY(-1px); }
+
+.unanswered-warning {
+    background:rgba(245,158,11,0.1);
+    border:1px solid rgba(245,158,11,0.3);
+    border-radius:12px;
+    padding:12px 16px;
+    font-size:13px; color:var(--yellow);
+    margin-top:10px;
+    display:none;
+}
+.unanswered-warning.show { display:block; }
+
+/* ── RESULTS ── */
+.results-hero {
+    text-align:center;
+    padding:40px 0 32px;
+}
+.score-ring {
+    width:140px; height:140px;
+    margin:0 auto 20px;
+    position:relative;
+    display:grid; place-items:center;
+}
+.score-ring svg { position:absolute; top:0; left:0; transform:rotate(-90deg); }
+.score-ring .score-num {
+    font-size:34px; font-weight:700;
+    font-family:'DM Mono',monospace;
+    position:relative;
+}
+.score-ring .score-label { font-size:12px; color:var(--muted); }
+.results-title { font-size:22px; font-weight:700; margin-bottom:6px; }
+.results-sub   { color:var(--muted); font-size:14px; }
+
+.results-breakdown {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px; margin:28px 0;
+}
+.breakdown-box {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px; text-align:center;
+}
+.breakdown-box .num { font-size:24px; font-weight:700; font-family:'DM Mono',monospace; }
+.breakdown-box .lbl { font-size:11px; color:var(--muted); text-transform:uppercase; margin-top:4px; }
+
+.answers-review { margin-bottom:28px; }
+.answers-review h3 { font-size:14px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:14px; }
+.review-item {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px;
+    margin-bottom:10px;
+}
+.review-item .ri-q       { font-size:13px; font-weight:600; margin-bottom:6px; }
+.review-item .ri-your    { font-size:12px; color:var(--muted); }
+.review-item .ri-correct { font-size:12px; color:var(--green); margin-top:3px; }
+.review-item.correct-item { border-color:rgba(34,197,94,0.3); }
+.review-item.wrong-item   { border-color:rgba(239,68,68,0.2); }
+.ri-icon { float:right; font-size:18px; }
+
+.results-actions { display:grid; gap:12px; }
+.btn-primary {
+    padding:15px; background:linear-gradient(135deg,var(--purple),var(--purple2));
+    border:none; border-radius:14px;
+    color:white; font-size:15px; font-weight:700;
+    cursor:pointer; font-family:'DM Sans',sans-serif;
+    transition:opacity 0.2s, transform 0.2s;
+}
+.btn-primary:hover { opacity:0.9; transform:translateY(-1px); }
+.btn-secondary {
+    padding:14px; background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    color:var(--text); font-size:15px; font-weight:600;
+    cursor:pointer; font-family:'DM Sans',sans-serif;
+    transition:border-color 0.2s;
+}
+.btn-secondary:hover { border-color:var(--purple); }
+
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(99,120,255,0.3); border-radius:3px; }
+
+@media(max-width:600px) {
+    .stats-row, .results-breakdown { grid-template-columns:repeat(2,1fr); }
+    .dot { width:28px; height:28px; font-size:11px; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+    <div class="topbar-logo">🎓 <span>Smart</span>Study</div>
+    <button class="back-btn" onclick="goBack()">← Back to Chat</button>
+</header>
+
+<div class="container">
+
+    <!-- DASHBOARD -->
+    <div class="screen active" id="screenDash">
+        <div class="dash-header">
+            <h1>📝 Your Quiz Centre</h1>
+            <p>Track progress, review past quizzes, and start a new one.</p>
+        </div>
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="num" id="statTotal">0</div>
+                <div class="label">Quizzes Taken</div>
+            </div>
+            <div class="stat-box">
+                <div class="num" id="statAvg">—</div>
+                <div class="label">Average Score</div>
+            </div>
+            <div class="stat-box">
+                <div class="num" id="statBest">—</div>
+                <div class="label">Best Score</div>
+            </div>
+        </div>
+        <div class="weekly-card">
+            <h3>Weekly Progress</h3>
+            <div id="weeklyBars"></div>
+        </div>
+        <div id="historySection" style="display:none">
+            <h3 style="font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;">Recent Quizzes</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+        <button class="start-btn" onclick="startQuiz()">
+            <span>🚀</span> Generate New Quiz
+        </button>
+    </div>
+
+    <!-- LOADING -->
+    <div class="screen" id="screenLoading">
+        <div class="loading-center">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loadingText">Generating your personalised quiz...</div>
+        </div>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="screen" id="screenQuiz">
+        <div class="quiz-progress-bar">
+            <div class="quiz-progress-fill" id="quizProgressFill" style="width:0%"></div>
+        </div>
+
+        <!-- Dot navigator -->
+        <div class="dot-nav" id="dotNav"></div>
+
+        <div class="quiz-meta">
+            <div class="quiz-counter" id="quizCounter">Question 1 of 10</div>
+            <div class="quiz-topic-tag" id="quizTopicTag">General</div>
+        </div>
+
+        <div class="question-card">
+            <div class="question-type" id="qType">Multiple Choice</div>
+            <div class="question-text" id="qText">Loading question...</div>
+            <div id="qOptions"></div>
+        </div>
+
+        <!-- Prev / Next navigation -->
+        <div class="nav-row" id="navRow">
+            <button class="prev-btn" id="prevBtn" onclick="goToPrev()">← Previous</button>
+            <button class="next-btn" id="nextBtn" onclick="goToNext()">Next →</button>
+        </div>
+
+        <!-- Submit all — shown only on last question -->
+        <button class="submit-all-btn" id="submitAllBtn" onclick="submitQuiz()">
+            ✅ Submit Quiz & See Results
+        </button>
+
+        <!-- Warning if unanswered questions remain -->
+        <div class="unanswered-warning" id="unansweredWarning"></div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="screen" id="screenResults">
+        <div class="results-hero">
+            <div class="score-ring">
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                    <circle cx="70" cy="70" r="58" fill="none" stroke="#161a30" stroke-width="10"/>
+                    <circle id="scoreCircle" cx="70" cy="70" r="58" fill="none"
+                        stroke="url(#scoreGrad)" stroke-width="10"
+                        stroke-linecap="round" stroke-dasharray="364" stroke-dashoffset="364"/>
+                    <defs>
+                        <linearGradient id="scoreGrad" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="#6378ff"/>
+                            <stop offset="100%" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div>
+                    <div class="score-num" id="resultsPct">0%</div>
+                    <div class="score-label">Score</div>
+                </div>
+            </div>
+            <div class="results-title" id="resultsTitle">Quiz Complete!</div>
+            <div class="results-sub"   id="resultsSub">Here's how you did</div>
+        </div>
+
+        <div class="results-breakdown">
+            <div class="breakdown-box">
+                <div class="num" style="color:var(--green)" id="resCorrect">0</div>
+                <div class="lbl">Correct</div>
+            </div>
+            <div class="breakdown-box">
+                <div class="num" style="color:var(--red)" id="resWrong">0</div>
+                <div class="lbl">Wrong</div>
+            </div>
+            <div class="breakdown-box">
+                <div class="num" style="color:var(--yellow)" id="resSkipped">0</div>
+                <div class="lbl">Skipped</div>
+            </div>
+        </div>
+
+        <div class="answers-review">
+            <h3>Review Answers</h3>
+            <div id="reviewList"></div>
+        </div>
+
+        <div class="results-actions">
+            <button class="btn-primary"   onclick="retakeQuiz()">🔄 Retake Quiz</button>
+            <button class="btn-secondary" onclick="showScreen('screenDash'); loadDashboard()">🆕 New Quiz</button>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+const API = 'http://127.0.0.1:5000';
+const currentUser = localStorage.getItem('smartstudy_user') || 'guest';
+
+let questions   = [];   // parsed question objects
+let current     = 0;    // index of currently displayed question
+// userAnswers[i] = string chosen, or null if not yet answered
+let userAnswers = [];
+let quizHistory = JSON.parse(localStorage.getItem(`quiz_history_${currentUser}`) || '[]');
+
+// ── SCREEN HELPER ──────────────────────────────────────────────────────────
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function goBack() { window.location.href = '/'; }
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+function loadDashboard() {
+    const total = quizHistory.length;
+    document.getElementById('statTotal').textContent = total;
+    if (total > 0) {
+        const avg  = Math.round(quizHistory.reduce((s,q) => s + q.pct, 0) / total);
+        const best = Math.max(...quizHistory.map(q => q.pct));
+        document.getElementById('statAvg').textContent  = avg  + '%';
+        document.getElementById('statBest').textContent = best + '%';
+    }
+
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const now  = new Date();
+    const weekData = days.map((day, i) => {
+        const dayQ = quizHistory.filter(q => {
+            const d    = new Date(q.date);
+            const diff = Math.floor((now - d) / 86400000);
+            return diff <= 6 && d.getDay() === (i + 1) % 7;
+        });
+        const pct = dayQ.length > 0
+            ? Math.round(dayQ.reduce((s,q) => s + q.pct, 0) / dayQ.length) : 0;
+        return { day, pct };
+    });
+
+    document.getElementById('weeklyBars').innerHTML = weekData.map(w => `
+        <div class="bar-row">
+            <div class="bar-day">${w.day}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${w.pct}%"></div></div>
+            <div class="bar-pct">${w.pct > 0 ? w.pct + '%' : '—'}</div>
+        </div>`).join('');
+
+    if (total > 0) {
+        document.getElementById('historySection').style.display = 'block';
+        document.getElementById('historyList').innerHTML = quizHistory.slice(0,8).map(q => {
+            const cls = q.pct >= 70 ? 'good' : q.pct >= 50 ? 'mid' : 'low';
+            return `<div class="history-item">
+                <div>
+                    <div class="hi-topic">${q.topic || 'General Quiz'}</div>
+                    <div class="hi-date">${new Date(q.date).toLocaleDateString()} • ${q.total} questions</div>
+                </div>
+                <div class="badge-score ${cls}">${q.pct}%</div>
+            </div>`;
+        }).join('');
+    }
+}
+
+// ── QUIZ GENERATION ────────────────────────────────────────────────────────
+async function startQuiz() {
+    showScreen('screenLoading');
+    document.getElementById('loadingText').textContent = 'Generating your personalised quiz...';
+    try {
+        const res  = await fetch(`${API}/api/adaptive-quiz?username=${encodeURIComponent(currentUser)}`);
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Failed to generate quiz');
+
+        questions   = parseQuiz(data.quiz);
+        if (questions.length === 0) throw new Error('Could not parse quiz questions');
+
+        current     = 0;
+        userAnswers = new Array(questions.length).fill(null);
+
+        buildDotNav();
+        showScreen('screenQuiz');
+        renderQuestion();
+
+    } catch(e) {
+        document.getElementById('loadingText').textContent = `Error: ${e.message}. Please try again.`;
+        setTimeout(() => showScreen('screenDash'), 3000);
+    }
+}
+
+// Retake = reset answers but keep same questions
+function retakeQuiz() {
+    current     = 0;
+    userAnswers = new Array(questions.length).fill(null);
+    buildDotNav();
+    showScreen('screenQuiz');
+    renderQuestion();
+}
+
+// ── QUIZ PARSER ────────────────────────────────────────────────────────────
+function parseQuiz(rawText) {
+    rawText = rawText.replace(/\*\*/g,'').replace(/\*/g,'').trim();
+
+    // Force a newline before every Q1. Q2. etc so the split always works
+    rawText = rawText.replace(/(Q\d+\.)/g, '\n$1');
+
+    const qs     = [];
+    const blocks = rawText.split(/\n(?=Q\d+\.)/i).filter(b => b.trim());
+
+    for (const block of blocks) {
+        const lines = block.trim().split('\n').map(l => l.trim()).filter(Boolean);
+        if (!lines.length) continue;
+
+        const qLine = lines[0].replace(/^Q\d+\.\s*/i,'').trim();
+        if (!qLine) continue;
+
+        const answerLine = lines.find(l => /^answer:/i.test(l));
+        const correct    = answerLine ? answerLine.replace(/^answer:/i,'').trim() : '';
+
+        // Detect options A) B) C) D)
+        const opts = lines.filter(l => /^[A-D]\)/i.test(l));
+
+        if (opts.length >= 2) {
+            // Multiple choice
+            qs.push({ type:'mc', question:qLine, options:opts, answer:correct });
+        } else if (/^(true|false)$/i.test(correct)) {
+            // True/False
+            qs.push({ type:'tf', question:qLine, answer:correct });
+        } else if (correct) {
+            // Short answer
+            qs.push({ type:'sa', question:qLine, answer:correct });
+        }
+
+        if (qs.length === 10) break;
+    }
+
+    // Fallback if still nothing parsed
+    if (qs.length === 0) {
+        rawText.split('\n')
+            .filter(l => l.trim().endsWith('?'))
+            .slice(0, 10)
+            .forEach(q => qs.push({
+                type: 'sa',
+                question: q.replace(/^\d+\.\s*/,'').trim(),
+                answer: 'See your notes for the correct answer.'
+            }));
+    }
+
+    return qs.slice(0, 10);
+}
+
+// ── DOT NAVIGATOR ─────────────────────────────────────────────────────────
+function buildDotNav() {
+    document.getElementById('dotNav').innerHTML = questions.map((_,i) =>
+        `<button class="dot${i===0?' current':''}" id="dot${i}" onclick="jumpTo(${i})">${i+1}</button>`
+    ).join('');
+}
+
+function updateDots() {
+    questions.forEach((_,i) => {
+        const d = document.getElementById('dot'+i);
+        if (!d) return;
+        d.className = 'dot' +
+            (i === current          ? ' current'  : '') +
+            (userAnswers[i] !== null ? ' answered' : '');
+    });
+}
+
+function jumpTo(idx) {
+    // Save any textarea content before jumping
+    saveShortAnswer();
+    current = idx;
+    renderQuestion();
+}
+
+// ── RENDER QUESTION ────────────────────────────────────────────────────────
+function renderQuestion() {
+    const q     = questions[current];
+    const total = questions.length;
+    const pct   = Math.round((current / total) * 100);
+
+    document.getElementById('quizProgressFill').style.width = pct + '%';
+    document.getElementById('quizCounter').textContent      = `Question ${current + 1} of ${total}`;
+
+    const typeLabels = { mc:'Multiple Choice', tf:'True / False', sa:'Short Answer' };
+    document.getElementById('qType').textContent = typeLabels[q.type] || 'Question';
+    document.getElementById('qText').textContent = q.question;
+
+    // Prev / Next buttons
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    prevBtn.disabled = current === 0;
+    nextBtn.textContent = current === total - 1 ? 'Last Question' : 'Next →';
+
+    // Submit button — visible only on last question
+    const submitBtn = document.getElementById('submitAllBtn');
+    submitBtn.classList.toggle('show', current === total - 1);
+
+    // Hide warning on navigation
+    document.getElementById('unansweredWarning').classList.remove('show');
+
+    // Build answer UI
+    const optEl = document.getElementById('qOptions');
+    const saved = userAnswers[current];
+
+    if (q.type === 'mc') {
+        optEl.innerHTML = `<div class="options-grid">
+            ${q.options.map(opt => {
+                const letter  = opt.charAt(0);
+                const isSel   = saved === letter;
+                return `<button class="option-btn${isSel?' selected':''}"
+                    onclick="selectMC(this,'${letter}')">
+                    <div class="opt-letter">${letter}</div>
+                    <span>${opt.replace(/^[A-D]\)\s*/,'')}</span>
+                </button>`;
+            }).join('')}
+        </div>`;
+
+    } else if (q.type === 'tf') {
+        const trueClass  = saved === 'True'  ? ' selected' : '';
+        const falseClass = saved === 'False' ? ' selected' : '';
+        optEl.innerHTML = `<div class="tf-row">
+            <button class="tf-btn${trueClass}"  onclick="selectTF(this,'True')">✅ True</button>
+            <button class="tf-btn${falseClass}" onclick="selectTF(this,'False')">❌ False</button>
+        </div>`;
+
+    } else {
+        optEl.innerHTML = `<div class="short-answer-area">
+            <textarea id="saInput" placeholder="Type your answer here...">${saved || ''}</textarea>
+        </div>`;
+        // Auto-save on every keystroke
+        document.getElementById('saInput').addEventListener('input', () => {
+            userAnswers[current] = document.getElementById('saInput').value.trim() || null;
+            updateDots();
+        });
+    }
+
+    updateDots();
+}
+
+// ── ANSWER SELECTION (no marking yet — just record choice) ─────────────────
+function selectMC(btn, letter) {
+    btn.closest('.options-grid').querySelectorAll('.option-btn')
+       .forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    userAnswers[current] = letter;
+    updateDots();
+}
+
+function selectTF(btn, value) {
+    btn.closest('.tf-row').querySelectorAll('.tf-btn')
+       .forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    userAnswers[current] = value;
+    updateDots();
+}
+
+function saveShortAnswer() {
+    const ta = document.getElementById('saInput');
+    if (ta) {
+        userAnswers[current] = ta.value.trim() || null;
+        updateDots();
+    }
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+function goToPrev() {
+    saveShortAnswer();
+    if (current > 0) { current--; renderQuestion(); }
+}
+
+function goToNext() {
+    saveShortAnswer();
+    if (current < questions.length - 1) { current++; renderQuestion(); }
+}
+
+// ── SUBMIT — marks all at once ─────────────────────────────────────────────
+function submitQuiz() {
+    saveShortAnswer();
+
+    const unanswered = userAnswers.map((a,i) => a === null ? i+1 : null).filter(Boolean);
+
+    if (unanswered.length > 0) {
+        const warn = document.getElementById('unansweredWarning');
+        warn.textContent = `⚠️ You haven't answered question${unanswered.length>1?'s':''}: ${unanswered.join(', ')}. Go back and answer or click Submit again to skip them.`;
+        warn.classList.add('show');
+
+        // On second click with unanswered questions, allow submission anyway
+        warn._secondClick = warn._secondClick || false;
+        if (!warn._secondClick) {
+            warn._secondClick = true;
+            warn.textContent += ' (Click Submit again to submit anyway.)';
+            return;
+        }
+    }
+
+    showResults();
+}
+
+// ── RESULTS — mark all at once ─────────────────────────────────────────────
+function showResults() {
+    const results = questions.map((q, i) => {
+        const userAnswer = userAnswers[i];
+        const skipped    = userAnswer === null;
+        let correct      = false;
+
+        if (!skipped) {
+            if (q.type === 'mc' || q.type === 'tf') {
+                correct = userAnswer.toUpperCase() === q.answer.charAt(0).toUpperCase();
+            } else {
+                // Short answer: give credit if they wrote something meaningful
+                correct = userAnswer.length > 3;
+            }
+        }
+
+        return { question:q.question, userAnswer: userAnswer||'(skipped)',
+                 correctAnswer:q.answer, correct, skipped };
+    });
+
+    const total   = results.length;
+    const correct = results.filter(r => r.correct).length;
+    const wrong   = results.filter(r => !r.correct && !r.skipped).length;
+    const skipped = results.filter(r => r.skipped).length;
+    const pct     = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+    showScreen('screenResults');
+
+    setTimeout(() => {
+        const offset = 364 - (pct / 100) * 364;
+        document.getElementById('scoreCircle').style.strokeDashoffset = offset;
+    }, 100);
+
+    document.getElementById('resultsPct').textContent  = pct + '%';
+    document.getElementById('resCorrect').textContent  = correct;
+    document.getElementById('resWrong').textContent    = wrong;
+    document.getElementById('resSkipped').textContent  = skipped;
+
+    const title = pct>=80 ? '🏆 Excellent Work!' : pct>=60 ? '👍 Good Job!' : pct>=40 ? '📚 Keep Studying!' : '💪 Try Again!';
+    const sub   = pct>=80 ? 'You have a strong grasp of this material.'
+                : pct>=60 ? "A little more practice and you'll nail it."
+                : pct>=40 ? 'Review your notes and try again.'
+                :           "Don't give up — every attempt makes you stronger.";
+    document.getElementById('resultsTitle').textContent = title;
+    document.getElementById('resultsSub').textContent   = sub;
+
+    document.getElementById('reviewList').innerHTML = results.map((r, i) => `
+        <div class="review-item ${r.correct ? 'correct-item' : 'wrong-item'}">
+            <span class="ri-icon">${r.correct ? '✅' : r.skipped ? '⏭️' : '❌'}</span>
+            <div class="ri-q">Q${i+1}. ${r.question}</div>
+            <div class="ri-your">Your answer: ${r.userAnswer}</div>
+            ${!r.correct && !r.skipped ? `<div class="ri-correct">✔ Correct: ${r.correctAnswer}</div>` : ''}
+        </div>`).join('');
+
+    // Save to history
+    const topic = localStorage.getItem(`smartstudy_last_topic_${currentUser}`) || 'General';
+    quizHistory.unshift({ pct, total, correct, date:new Date().toISOString(), topic });
+    if (quizHistory.length > 20) quizHistory.pop();
+    localStorage.setItem(`quiz_history_${currentUser}`, JSON.stringify(quizHistory));
+    loadDashboard();
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+loadDashboard();
+</script>
+</body>
+</html>

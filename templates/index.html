@@ -3,498 +3,1770 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartStudy AI Tutor</title>
+    <title>SmartStudy Offline Tutor</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --purple: #667eea;
+            --purple-dark: #564ab1;
+            --purple-soft: #f2f1ff;
+            --text: #202124;
+            --text-muted: #5f6368;
+            --surface: #ffffff;
+            --surface-strong: #f7f7ff;
+            --border: rgba(102, 126, 234, 0.18);
+            --success: #26a69a;
         }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at top left, rgba(102,126,234,0.25), transparent 40%),
+                        radial-gradient(circle at bottom right, rgba(118,75,162,0.2), transparent 30%),
+                        linear-gradient(135deg, #5f7bea 0%, #784bb3 100%);
+            color: var(--text);
+        }
+
+        /* ── TOPBAR ── */
+        .topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            gap: 16px;
+            padding: 12px 24px;
+            background: rgba(6,6,28,0.85);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255,255,255,0.10);
         }
-        
-        .container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 800px;
-            display: flex;
-            flex-direction: column;
-            height: 90vh;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px 12px 0 0;
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-        
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        .chat-box {
-            flex: 1;
+        .topbar-title h1 { margin:0; font-size:17px; letter-spacing:.02em; color:white; }
+        .topbar-title h1::before { content:'🎓 '; }
+        .topbar-title p  { margin:3px 0 0; color:rgba(255,255,255,0.6); font-size:12px; }
+        .topbar-actions  { margin-left:auto; display:flex; gap:8px; }
+
+        /* ── SIDE DRAWER ── */
+        .side-drawer {
+            position: fixed;
+            left: -320px; top: 0;
+            width: 320px; height: 100vh;
+            background: linear-gradient(180deg,#020617 0%,#08102a 100%);
+            border-right: 1px solid rgba(74,158,255,0.18);
+            z-index: 200;
+            display: flex; flex-direction: column;
+            padding: 24px 18px;
+            box-shadow: 2px 0 30px rgba(0,0,0,0.35);
+            transition: left 0.3s ease;
             overflow-y: auto;
-            padding: 20px;
+        }
+        .side-drawer.open { left: 0; }
+        .drawer-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+        .drawer-header h3 { color:white; font-size:18px; }
+        .drawer-close { color:white; font-size:26px; border:none; background:transparent; cursor:pointer; }
+        .drawer-nav { display:flex; flex-direction:column; gap:10px; }
+        .drawer-link {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 16px; border-radius:12px;
+            background:rgba(255,255,255,0.07);
+            color:rgba(255,255,255,0.88);
+            text-decoration:none; font-size:15px;
+            transition:background 0.2s;
+            border: none; cursor: pointer; font-weight: normal;
+        }
+        .drawer-link:hover { background:rgba(102,126,234,0.25); }
+
+        /* ── APP SHELL ── */
+        .app-shell {
+            position: fixed;
+            top: 55px; left: 0; right: 0; bottom: 0;
+            display: flex;
+            overflow: hidden;
+        }
+        .main-grid {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-        }
-        
-        .message {
-            display: flex;
-            margin-bottom: 10px;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .message.user {
-            justify-content: flex-end;
-        }
-        
-        .message.assistant {
-            justify-content: flex-start;
-        }
-        
-        .message-content {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 8px;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-        }
-        
-        .user .message-content {
-            background: #667eea;
-            color: white;
-            border-bottom-right-radius: 0;
-        }
-        
-        .assistant .message-content {
-            background: #f0f0f0;
-            color: #333;
-            border-bottom-left-radius: 0;
-        }
-        
-        .sources {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f9f9f9;
-            border-left: 3px solid #667eea;
-            border-radius: 4px;
-            font-size: 13px;
-            color: #666;
-        }
-        
-        .sources strong {
-            color: #333;
-        }
-        
-        .source-item {
-            margin: 5px 0;
-            padding: 5px;
-            background: white;
-            border-radius: 4px;
-        }
-        
-        .input-area {
-            padding: 20px;
-            border-top: 1px solid #eee;
-            display: flex;
+            overflow: hidden;
+            padding: 14px;
             gap: 10px;
         }
-        
-        .input-area input {
+
+        /* ── CARDS ── */
+        .card {
+            background: rgba(255,255,255,0.96);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 22px;
+            box-shadow: 0 20px 60px rgba(16,24,40,0.08);
+            flex-shrink: 0;
+        }
+
+        /* ── ASSISTANT PANEL ── */
+        .assistant-panel {
             flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
+            min-height: 0;
+            background: linear-gradient(135deg,#060618 0%,#11142c 45%,#13173c 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        
-        .input-area input:focus {
-            border-color: #667eea;
+        .assistant-header {
+            flex-shrink: 0;
+            padding: 16px 24px;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
         }
-        
-        .input-area button {
-            padding: 12px 24px;
-            background: #667eea;
-            color: white;
+        .assistant-header h3 { font-size:17px; color:#fff; margin:0; }
+        .assistant-header p  { color:rgba(255,255,255,0.6); font-size:12px; margin:3px 0 0; }
+        .assistant-body { flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+
+        /* scrollable messages */
+        .assistant-messaging {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 18px 22px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+        }
+        .assistant-messaging::-webkit-scrollbar { width:6px; }
+        .assistant-messaging::-webkit-scrollbar-track { background:transparent; }
+        .assistant-messaging::-webkit-scrollbar-thumb { background:rgba(102,126,234,0.4); border-radius:4px; }
+        .assistant-messaging::-webkit-scrollbar-thumb:hover { background:rgba(102,126,234,0.7); }
+
+        /* fixed input bar */
+        .assistant-inputs {
+            flex-shrink: 0;
+            padding: 12px 22px 16px;
+            background: rgba(0,0,0,0.25);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .chat-input-bar {
+            display:flex; align-items:center; gap:10px;
+            background:#0d0d1a;
+            border:1px solid rgba(74,158,255,0.2);
+            border-radius:18px;
+            padding:10px 14px;
+        }
+        .chat-text-input {
+            flex:1; background:transparent; border:none; outline:none;
+            color:#fff; font-size:14px; padding:5px 0;
+        }
+        .chat-text-input::placeholder { color:rgba(255,255,255,0.35); }
+        .icon-btn {
+            width:40px; height:40px; border-radius:12px;
+            background:#1a1a2e; border:1px solid rgba(74,158,255,0.25);
+            display:grid; place-items:center; cursor:pointer; flex-shrink:0;
+            transition:background 0.2s; padding:0;
+        }
+        .icon-btn svg { width:20px; height:20px; }
+        .icon-btn:hover { background:#1e1e3a; }
+        .voice-btn.active { background:rgba(123,94,167,0.3); border-color:#7b5ea7; }
+
+        /* messages */
+        .message {
+            padding:13px 17px; border-radius:20px;
+            max-width:82%; line-height:1.7; font-size:14px;
+            animation:fadeUp 0.28s ease-out;
+        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
+        .message.user {
+            align-self:flex-end;
+            background:linear-gradient(135deg,#667eea,#764ba2);
+            color:white; border-bottom-right-radius:4px;
+        }
+        .message.assistant {
+            align-self:flex-start;
+            background:rgba(255,255,255,0.07);
+            color:rgba(255,255,255,0.92); border-bottom-left-radius:4px;
+        }
+
+        /* thinking dots */
+        .thinking-cursor { display:flex; align-items:center; gap:5px; padding:2px 0; }
+        .thinking-cursor span {
+            width:7px; height:7px; background:rgba(102,126,234,0.8);
+            border-radius:50%; animation:bounce 1s infinite;
+        }
+        .thinking-cursor span:nth-child(2){animation-delay:.15s}
+        .thinking-cursor span:nth-child(3){animation-delay:.3s}
+        @keyframes bounce{0%,80%,100%{transform:scale(1);opacity:.6}40%{transform:scale(1.4);opacity:1}}
+
+        /* sources */
+        .source-badge {
+            background:rgba(102,126,234,0.15); border:1px solid rgba(102,126,234,0.3);
+            border-radius:10px; padding:3px 8px; font-size:12px; color:#a5b4fc;
+            margin-top:8px; display:inline-block; cursor:pointer;
+        }
+        .sources { margin-top:8px; padding:8px; background:rgba(102,126,234,0.08); border-radius:8px; border-left:3px solid var(--purple); }
+        .hidden-sources { display:none; }
+        .source-item { font-size:12px; color:rgba(255,255,255,0.5); margin-bottom:4px; }
+
+        /* speaking */
+        .speaking-animation { animation:pulse 1s ease-in-out infinite; color:#f0eeee; font-weight:bold; }
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+        /* hamburger */
+        .hamburger {
+            display:flex; flex-direction:column; justify-content:space-between;
+            width:30px; height:22px; background:transparent;
+            border:1px solid rgba(255,255,255,0.3); border-radius:8px;
+            padding:5px 4px; cursor:pointer; flex-shrink:0;
+        }
+        .hamburger span { display:block; width:100%; height:2px; background:white; border-radius:2px; }
+
+        /* ── AUTH MODAL OVERLAY ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 400;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+
+        /* click outside to close */
+        .modal-overlay { cursor: pointer; }
+        .auth-modal    { cursor: default; }
+
+        .auth-modal {
+            background: #fff;
+            border-radius: 24px;
+            padding: 40px 34px 30px;
+            width: 100%;
+            max-width: 430px;
+            margin: 16px;
+            position: relative;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.4);
+            animation: modalIn 0.28s cubic-bezier(.34,1.46,.64,1);
+        }
+        @keyframes modalIn {
+            from { opacity:0; transform:scale(0.90) translateY(20px); }
+            to   { opacity:1; transform:scale(1)    translateY(0);    }
+        }
+
+        /* X close button */
+        .modal-close {
+            position: absolute;
+            top: 14px; right: 14px;
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.07);
             border: none;
-            border-radius: 8px;
+            font-size: 20px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background 0.2s;
+            color: #555;
+            display: flex; align-items: center; justify-content: center;
+            line-height: 1;
+            transition: background 0.2s, color 0.2s;
         }
-        
-        .input-area button:hover {
-            background: #764ba2;
+        .modal-close:hover { background:rgba(0,0,0,0.15); color:#111; transform:none; opacity:1; }
+
+        .auth-modal h2        { font-size:22px; color:var(--text); margin-bottom:4px; }
+        .auth-modal .subtitle { font-size:13px; color:var(--text-muted); margin-bottom:22px; }
+
+        .auth-modal .form-group { margin-bottom:14px; }
+        .auth-modal label {
+            display:block; margin-bottom:5px;
+            font-size:13px; color:var(--text-muted); font-weight:500;
         }
-        
-        .input-area button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
+        .auth-modal input,
+        .auth-modal select {
+            width:100%;
+            border:1.5px solid rgba(15,23,42,0.12);
+            border-radius:12px;
+            padding:11px 14px;
+            font-size:14px;
+            outline:none;
+            background:#fafafa;
+            transition:border-color 0.2s, box-shadow 0.2s;
         }
-        
-        .loading {
-            text-align: center;
-            color: #999;
-            padding: 20px;
-            font-style: italic;
+        .auth-modal input:focus,
+        .auth-modal select:focus {
+            border-color:var(--purple);
+            box-shadow:0 0 0 3px rgba(102,126,234,0.14);
+            background:#fff;
         }
-        
-        .error {
-            background: #fee;
-            color: #c33;
-            padding: 12px;
-            border-radius: 8px;
-            margin: 10px 0;
+        .auth-btn-row { display:flex; gap:10px; margin-top:20px; }
+        .auth-btn-row button {
+            flex:1; padding:13px; font-size:15px;
+            border-radius:14px; border:none; cursor:pointer; font-weight:600;
         }
-        
-        .sidebar-info {
-            background: #f5f5f5;
-            padding: 15px;
-            border-top: 1px solid #eee;
-            font-size: 12px;
-            max-height: 100px;
+        .auth-btn-primary   { background:var(--purple); color:white; }
+        .auth-btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+        .auth-btn-secondary { background:#f0f0f8; color:var(--text); }
+        .auth-btn-secondary:hover { background:#e4e4f4; transform:none; opacity:1; }
+
+        .auth-toggle-row {
+            text-align:center; margin-top:16px;
+            font-size:13px; color:var(--text-muted);
+        }
+        .auth-toggle-row a {
+            color:var(--purple-dark); text-decoration:none; font-weight:600;
+        }
+        .auth-toggle-row a:hover { text-decoration:underline; }
+
+        /* divider */
+        .auth-divider {
+            display:flex; align-items:center; gap:10px;
+            margin:18px 0; color:var(--text-muted); font-size:12px;
+        }
+        .auth-divider::before,
+        .auth-divider::after {
+            content:''; flex:1; height:1px; background:rgba(0,0,0,0.1);
+        }
+
+        /* ── ADMIN PANEL ── */
+        .admin-panel:not(.hidden) { 
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 28px;
+            overflow-y: auto;
+            height: calc(100vh - 90px);
+        }
+
+        .admin-tab-content {
+            flex: 1;
             overflow-y: auto;
         }
+        .admin-header { display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--border); }
+        .admin-tabs { display:flex;gap:10px;margin:14px 0;flex-wrap:wrap; }
+        .tab-btn { background:none;border:1px solid var(--border);border-radius:14px;padding:8px 14px;cursor:pointer;color:var(--text);transition:all .2s; }
+        .tab-btn.active { background:var(--purple);color:white;border-color:var(--purple); }
+        .admin-tab-content { padding:10px 0 0; }
+        .admin-tab-content.hidden { display:none; }
+        .admin-list { display:grid;gap:10px; }
+        .admin-user-item { padding:14px;border:1px solid rgba(102,126,234,0.1);border-radius:12px;display:grid;grid-template-columns:1fr auto;align-items:center; }
+        .admin-file-item { padding:14px;border:1px solid rgba(102,126,234,0.1);border-radius:12px;display:flex;justify-content:space-between;align-items:center; }
+        .admin-stats { display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px; }
+        .stat-card { padding:16px;border:1px solid rgba(102,126,234,0.1);border-radius:12px;text-align:center; }
+        .stat-card h3 { font-size:26px;color:var(--purple);margin-bottom:5px; }
+
+
+        .math-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(102,126,234,0.25);
+        border-radius: 16px; overflow: hidden; margin: 4px 0; width: 100%;
+        }
+
+        .math-card-header {
+        background: rgba(102,126,234,0.15); padding: 11px 16px;
+        border-bottom: 1px solid rgba(102,126,234,0.2);
+        display: flex; align-items: center; gap: 10px;
+        }
+
+        .math-card-header h4 { color: #c4b5fd; font-size: 13px; font-weight: 600; margin: 0; }
+        .math-topic-badge {
+         background: rgba(102,126,234,0.3); color: #a5b4fc;
+         border-radius: 8px; padding: 2px 9px; font-size: 11px; font-weight: 600;
+        }
+
+        .math-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+        .problem-box {
+        background: rgba(250,204,21,0.07); border: 1px solid rgba(250,204,21,0.22);
+        border-radius: 10px; padding: 11px 15px;
+        color: rgba(255,255,255,0.85); font-size: 13px; line-height: 1.6;
+        }
+
+        .prob-label {
+         color: #fde68a; font-weight: 600; font-size: 12px;
+         text-transform: uppercase; letter-spacing: .05em; display: block; margin-bottom: 4px;
+       }
+
+       .formula-ref {
+        background: rgba(118,75,162,0.1); border: 1px solid rgba(118,75,162,0.28);
+        border-left: 3px solid #7b5ea7; border-radius: 0 10px 10px 0; padding: 11px 15px;
+        }
+
+       .formula-ref-label {
+        color: #c4b5fd; font-size: 11px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+        }
+
+        .formula-display {
+         text-align: center; font-family: 'Georgia', serif;
+         font-size: 16px; color: #e9d5ff; margin-bottom: 8px;
+         }
+
+        .formula-vars { display: flex; flex-wrap: wrap; gap: 5px; }
+        .formula-var {
+        background: rgba(118,75,162,0.2); border-radius: 6px;
+        padding: 3px 9px; font-size: 11px; color: rgba(255,255,255,0.65);
+        }
+
+        .formula-var b { color: #c4b5fd; }
+        .steps-list { display: flex; flex-direction: column; gap: 9px; }
+        .step-row { display: flex; gap: 11px; align-items: flex-start; }
+        .step-num {
+
+         width: 24px; height: 24px; border-radius: 50%;
+         background: rgba(102,126,234,0.28); border: 1px solid rgba(102,126,234,0.5);
+        color: #a5b4fc; font-size: 11px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+
+        .step-content { flex: 1; }
+        .step-title { color: rgba(255,255,255,0.85); font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+        .step-formula {
+        background: #0a0a1a; border: 1px solid rgba(74,158,255,0.18);
+        border-radius: 9px; padding: 9px 14px; text-align: center;
+        font-family: 'Georgia', serif; font-size: 14px; color: #7dd3fc; margin-bottom: 4px;
+        }
+
+       .step-note { color: rgba(255,255,255,0.45); font-size: 11px; line-height: 1.5; }
+       .answer-box {
+        background: rgba(26,163,106,0.09); border: 1px solid rgba(74,222,128,0.3);
+        border-radius: 11px; padding: 12px 16px;
+        display: flex; align-items: center; gap: 12px; margin-top: 4px;
+        }
+
+        .answer-checkmark {
+        width: 30px; height: 30px; border-radius: 50%;
+        background: rgba(74,222,128,0.18);
+        display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+        }
+
+        .answer-label { color: rgba(255,255,255,0.45); font-size: 11px; margin-bottom: 2px; }
+        .answer-value { color: #4ade80; font-size: 18px; font-weight: 700; font-family: 'Georgia', serif; }
         
-        .sidebar-info h4 {
-            margin-bottom: 8px;
-            color: #333;
+        /* misc */
+        .hidden { display:none !important; }
+        .small-note { font-size:13px; color:var(--text-muted); }
+
+        button, .button-link {
+            border:none; border-radius:14px; padding:10px 16px; cursor:pointer;
+            font-weight:600; transition:transform 0.2s ease, opacity 0.2s ease;
+            background:var(--purple); color:white; font-size:14px;
+        }
+        button:hover { transform:translateY(-1px); opacity:0.95; }
+        .button-secondary { background:#f0f0f8; color:var(--text); border:1px solid rgba(15,23,42,0.08); }
+
+        .assistant-header select {
+            background:rgba(255,255,255,0.08);
+            border:1px solid rgba(255,255,255,0.15);
+            border-radius:12px; color:white;
+            padding:6px 12px; font-size:13px; width:auto; outline:none;
+        }
+        .assistant-header select option { background:#11142c; color:white; }
+
+        /* logged-in topbar indicator */
+        .user-chip {
+            display:flex; align-items:center; gap:8px;
+            background:rgba(255,255,255,0.12);
+            border:1px solid rgba(255,255,255,0.2);
+            border-radius:20px; padding:5px 12px;
+            color:white; font-size:13px; font-weight:600;
+        }
+        .user-chip .dot { width:8px;height:8px;background:#4ade80;border-radius:50%; }
+
+        .admin-panel h2 { color: var(--text); }
+        .admin-panel h3 { color: var(--text); margin-bottom: 12px; }
+        .admin-panel .tab-btn { color: var(--text); }
+        .admin-panel .admin-file-item { 
+            background: #f7f7ff; 
+            border: 1px solid rgba(102,126,234,0.15);
+        }
+        .admin-panel .admin-user-item {
+            background: #f7f7ff;
+            border: 1px solid rgba(102,126,234,0.15);
+        }
+        .admin-panel .stat-card {
+            background: #f7f7ff;
         }
         
-        .sidebar-info ul {
-            list-style: none;
-            color: #666;
-        }
-        
-        .sidebar-info li {
-            padding: 3px 0;
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📚 SmartStudy AI Tutor</h1>
-            <p>Your intelligent study companion</p>
-        </div>
-        
-        <div class="chat-box" id="chatBox"></div>
-        
-        <div class="sidebar-info">
-            <h4>📄 Loaded Documents:</h4>
-            <ul id="filesList">
-                <li>Loading...</li>
-            </ul>
+
+<!-- ═══════════════════════════════════════════
+     AUTH MODAL — rendered outside app-shell
+     so it floats above everything
+     ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="authOverlay" onclick="handleOverlayClick(event)">
+    <div class="auth-modal" id="authModal">
+
+        <!-- X close button -->
+        <button class="modal-close" onclick="hideAuthModal()" title="Close">&times;</button>
+
+        <h2 id="authTitle">Welcome back</h2>
+        <p class="subtitle" id="authSubtitle">Login to save your progress and access all features.</p>
+        <div id="authError" style="display:none; background:#fff0f0; border:1px solid #ffcccc; border-radius:10px; padding:10px 14px; margin-bottom:14px; color:#cc0000; font-size:13px; font-weight:600;"></div>
+
+        <!-- USERNAME -->
+        <div class="form-group">
+            <label for="authUsername">Username</label>
+            <input id="authUsername" placeholder="Enter your username" autocomplete="username">
         </div>
 
-        <div style="padding: 10px; border-top: 1px solid #eee;">
-    <input type="file" id="studyFile">
-    <button onclick="uploadFile()" style="margin-left:10px;">
-        Upload Study Material
-    </button>
-</div>
-        
-        <div class="input-area">
-            
-            <!-- 🎤 VOICE BUTTONS -->
-            <button onclick="startRecording()">🎤 Speak</button>
-            <button onclick="stopRecording()">⏹ Stop</button>
+        <!-- PASSWORD -->
+        <div class="form-group">
+            <label for="authPassword">Password</label>
+            <input id="authPassword" type="password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
 
-            <!-- TEXT INPUT -->
-            <input 
-                type="text" 
-                id="questionInput" 
-                placeholder="Ask about your study materials..."
-                autocomplete="off"
-            >
-            <button id="sendBtn" onclick="sendQuestion()">Send</button>
+        <!-- SIGNUP ONLY FIELDS -->
+        <div class="form-group signup-field hidden">
+            <label for="authName">Full Name</label>
+            <input id="authName" placeholder="e.g. enter your name" autocomplete="name">
+        </div>
+        <div class="form-group signup-field hidden">
+            <label for="authGrade">Grade / Form</label>
+            <input id="authGrade" placeholder="e.g. Form 4">
+        </div>
+        <div class="form-group signup-field hidden">
+            <label for="authRole">Role</label>
+            <select id="authRole">
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="auth-btn-row">
+            <button class="auth-btn-primary" onclick="submitAuth()" id="authSubmitBtn">Login</button>
+            <button class="auth-btn-secondary" onclick="hideAuthModal()">Cancel</button>
+        </div>
+
+        <!-- TOGGLE LOGIN ↔ SIGNUP -->
+        <div class="auth-toggle-row">
+            <span id="authToggleText">Don't have an account?</span>
+            <a href="#" onclick="event.preventDefault(); toggleAuthMode()" id="authToggleLink">Sign up</a>
         </div>
     </div>
+</div>
 
-    <script>
-        const chatBox = document.getElementById('chatBox');
-        const questionInput = document.getElementById('questionInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const filesList = document.getElementById('filesList');
+<!-- SIDE DRAWER -->
+<div id="sideDrawer" class="side-drawer">
+    <div class="drawer-header">
+        <h3>SmartGuide</h3>
+        <button class="drawer-close" onclick="closeDrawer()">&times;</button>
+    </div>
+    <nav class="drawer-nav">
+        <button class="drawer-link" onclick="showAdminPanel(); closeDrawer();">⚙️ Admin Dashboard</button>
+        <button class="drawer-link" onclick="generateAdaptiveQuiz(); closeDrawer();">🧠 Take a Quiz</button>
+        <button class="drawer-link" onclick="syncTeacher(); closeDrawer();">👨‍🏫 Weekly Teacher Sync</button>
+        <button class="drawer-link" onclick="downloadSharePack(); closeDrawer();">📡 Bluetooth Sharing</button>
+        <button class="drawer-link" onclick="logoutUser(); closeDrawer();">🚪 Logout</button>
+    </nav>
+</div>
 
-        let mediaRecorder;
-        let audioChunks = [];
+<!-- FIXED TOPBAR -->
+<header class="topbar">
+    <button class="hamburger" onclick="toggleDrawer()" aria-label="Open navigation">
+        <span></span><span></span><span></span>
+    </button>
+    <div class="topbar-title">
+        <h1>SMARTSTUDY — AI Tutor for Rural Students</h1>
+        <p>Curriculum-aligned answers grounded in local ZIMSEC and heritage materials.</p>
+    </div>
+    <div class="topbar-actions" id="topbarActions">
+        <button class="button-secondary" onclick="showAuthModal('login')" id="loginBtn">Login</button>
+    </div>
+</header>
 
-        async function startRecording() {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+<!-- APP SHELL -->
+<div class="app-shell">
+    <main class="main-grid">
 
-            mediaRecorder = new MediaRecorder(stream)
-            audioChunks = [];
+  <!-- ADMIN PANEL -->
+<section class="card admin-panel hidden" id="adminPanel" style="background:#fff; border-radius:24px; padding:28px; overflow-y:auto; height:calc(100vh - 90px);">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+        <h2 style="color:var(--text); margin:0;">Admin Dashboard</h2>
+        <button class="button-secondary" onclick="hideAdminPanel()">Close</button>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+        <button class="tab-btn active" id="tabUsers" onclick="showAdminTab('users', this)">Users</button>
+        <button class="tab-btn" id="tabFiles" onclick="showAdminTab('files', this)">Files</button>
+        <button class="tab-btn" id="tabStats" onclick="showAdminTab('stats', this)">Statistics</button>
+    </div>
+
+    <div id="adminUsersTab">
+        <h3 style="margin-bottom:14px; color:var(--text);">All Users</h3>
+
+        <!-- CREATE USER FORM -->
+        <div style="background:#f7f7ff; border:1px solid rgba(102,126,234,0.2);
+                    border-radius:14px; padding:18px; margin-bottom:18px;">
+            <h4 style="margin:0 0 12px; color:var(--text);">Create New Account</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                <input id="newUsername" placeholder="Username"
+                    style="padding:9px 12px; border:1px solid var(--border);
+                           border-radius:10px; font-size:13px;">
+                <input id="newPassword" type="password" placeholder="Password"
+                    style="padding:9px 12px; border:1px solid var(--border);
+                           border-radius:10px; font-size:13px;">
+                <input id="newName" placeholder="Full Name"
+                    style="padding:9px 12px; border:1px solid var(--border);
+                           border-radius:10px; font-size:13px;">
+                <input id="newGrade" placeholder="Grade e.g. Form 4"
+                    style="padding:9px 12px; border:1px solid var(--border);
+                           border-radius:10px; font-size:13px;">
+                <select id="newRole"
+                    style="padding:9px 12px; border:1px solid var(--border);
+                           border-radius:10px; font-size:13px;">
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                </select>
+                <button onclick="adminCreateUser()"
+                    style="background:var(--purple); color:white; border:none;
+                           border-radius:10px; font-size:13px; cursor:pointer;">
+                    Create Account
+                </button>
+            </div>
+            <p id="createUserStatus"
+               style="font-size:13px; margin-top:8px; min-height:18px;"></p>
+        </div>
+
+        <!-- USERS LIST -->
+        <div id="adminUsersList" class="admin-list"></div>
+    </div>
+
+    <div id="adminFilesTab" class="hidden">
+        <h3 style="margin-bottom:14px; color:var(--text);">Uploaded Files</h3>
+        <div style="margin-bottom:20px; padding:16px; background:#f7f7ff; border-radius:14px; border:1px solid rgba(102,126,234,0.2);">
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Upload new study materials (PDF, DOCX, TXT, PPTX, XLSX, CSV)</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <input type="file" id="adminUploadFile" accept=".pdf,.txt,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.csv" style="flex:1; min-width:200px; border:1px solid var(--border); border-radius:10px; padding:8px;">
+                <button onclick="adminUploadFile()" style="white-space:nowrap;">Upload File</button>
+            </div>
+            <p id="adminUploadStatus" style="font-size:13px; margin-top:10px; min-height:18px;"></p>
+        </div>
+        <div id="adminFilesList" class="admin-list"></div>
+    </div>
+
+    <div id="adminStatsTab" class="hidden">
+        <h3 style="margin-bottom:14px; color:var(--text);">Statistics</h3>
+        <div id="adminStats" class="admin-stats"></div>
+    </div>
 
 
-           mediaRecorder.ondataavailable = event => {
-            audioChunks.push(event.data);
-            };
 
-            mediaRecorder.start();
-            console.log("Recording started...");
-            }
 
-            async function stopRecording() {
-    mediaRecorder.stop();
+<div id="adminFilesTab" class="admin-tab-content hidden">
+    <h3>Uploaded Files</h3>
+    <div style="margin-bottom:16px; padding:14px; background:rgba(102,126,234,0.05); border-radius:12px; border:1px solid rgba(102,126,234,0.15);">
+        <p class="small-note" style="margin-bottom:10px;">Upload new study materials (PDF, DOCX, TXT, PPTX, XLSX)</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <input type="file" id="adminUploadFile" accept=".pdf,.txt,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.csv" style="flex:1; min-width:200px;">
+            <button onclick="adminUploadFile()">⬆ Upload</button>
+        </div>
+        <p id="adminUploadStatus" style="font-size:13px; margin-top:8px;"></p>
+    </div>
+    <div id="adminFilesList" class="admin-list"></div>
+</div>
 
-    mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+<div id="adminStatsTab" class="admin-tab-content hidden"><h3>Statistics</h3><div id="adminStats" class="admin-stats"></div></div>
+            <div id="adminStatsTab" class="admin-tab-content hidden"><h3>Statistics</h3><div id="adminStats" class="admin-stats"></div></div>
+        </section>
 
-        let formData = new FormData();
-        formData.append("file", audioBlob, "voice.webm");
+        <!-- CHAT PANEL -->
+        <section class="assistant-panel" id="assistantPanel">
+            <div class="assistant-header">
+                <div>
+                    <h3>Ask SmartStudy</h3>
+                    <p>Get answers from local ZIMSEC and heritage materials.</p>
+                </div>
+                <select id="languageSelect" aria-label="Language">
+                    <option value="en">English</option>
+                    <option value="sn">Shona</option>
+                    <option value="auto">Auto detect</option>
+                </select>
+            </div>
 
-        let response = await fetch("/api/voice", {
-            method: "POST",
-            body: formData
-        });
+            <div class="assistant-body">
+                <!-- SCROLLABLE MESSAGES -->
+                <div class="assistant-messaging" id="chatBox"></div>
 
-        let data = await response.json();
+                <!-- FIXED INPUT -->
+                <div class="assistant-inputs">
+                        <div id="attachmentPreview" style="display:none; background:rgba(74,158,255,0.1); border:1px solid rgba(74,158,255,0.3); border-radius:12px; padding:10px 14px; margin-bottom:8px; display:none; align-items:center; gap:10px;">
+                            <span style="font-size:20px;">📎</span>
+                            <div style="flex:1;">
+                                <div id="attachmentName" style="color:#4a9eff; font-size:13px; font-weight:600;"></div>
+                                <div id="attachmentStatus" style="color:rgba(255,255,255,0.5); font-size:12px;">Ready to upload</div>
+                            </div>
+                            <div id="attachmentProgress" style="display:none;">
+                                <div style="width:80px; height:4px; background:rgba(255,255,255,0.1); border-radius:2px;">
+                                    <div id="progressBar" style="width:0%; height:100%; background:#4a9eff; border-radius:2px; transition:width 0.3s;"></div>
+                                </div>
+                            </div>
+                            <button onclick="clearAttachment()" style="background:none; border:none; color:rgba(255,255,255,0.4); font-size:18px; cursor:pointer; padding:0; line-height:1;">&times;</button>
+                        </div>
+                        <div class="chat-input-bar">
+                        <input id="questionInput" type="text"
+                               placeholder="Ask about cells, algebra, exams, or revision..."
+                               class="chat-text-input">
+                        <button class="icon-btn" onclick="document.getElementById('chatFileInput').click()" title="Upload file">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v10" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/><path d="M16 7l-4-4-4 4" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/><path d="M6 17h12" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/><path d="M6 21h12" stroke="#7b5ea7" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg>
+                        </button>
+                        <button id="voiceToggleBtn" class="icon-btn voice-btn" onclick="toggleVoiceSupport()" title="Voice input">
+                            <svg viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="11" rx="3" fill="url(#mg)"/><path d="M5 11a7 7 0 0014 0" stroke="url(#mg)" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="18" x2="12" y2="22" stroke="#4a9eff" stroke-width="2" stroke-linecap="round"/><defs><linearGradient id="mg" x1="9" y1="2" x2="15" y2="13" gradientUnits="userSpaceOnUse"><stop stop-color="#4a9eff"/><stop offset="1" stop-color="#7b5ea7"/></linearGradient></defs></svg>
+                        </button>
+                        <button id="sendBtn" class="icon-btn" onclick="sendQuestion()" title="Send">
+                            <svg viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="url(#sg)" stroke-width="2" stroke-linecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" fill="url(#sg)"/><defs><linearGradient id="sg" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse"><stop stop-color="#4a9eff"/><stop offset="1" stop-color="#7b5ea7"/></linearGradient></defs></svg>
+                        </button>
+                    </div>
+                    <input type="file" id="chatFileInput" class="hidden" onchange="uploadInlineFile(this)">
+                </div>
+            </div>
+        </section>
 
-        addMessage("user", data.text);
-        addMessage("assistant", data.answer);
+    </main>
+</div>
 
-        if (data.audio) {
-            let audio = new Audio(data.audio);
-            audio.play();
-        }
-    };
+<input type="file" id="shareImportFile" accept="application/json" class="hidden" onchange="importSharePack(event)">
+
+<script>
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const chatBox        = document.getElementById('chatBox');
+const questionInput  = document.getElementById('questionInput');
+const sendBtn        = document.getElementById('sendBtn');
+const languageSelect = document.getElementById('languageSelect');
+const voiceToggleBtn = document.getElementById('voiceToggleBtn');
+const authOverlay    = document.getElementById('authOverlay');
+
+
+// ── MATH SYSTEM PROMPT ────────────────────────────────────────────────────────
+const MATH_SYSTEM_PROMPT = `You are SMARTSTUDY, a ZIMSEC tutor.
+CRITICAL RULES:
+1. Do NOT use markdown. No ##, no **, no $$.
+2. Do NOT use LaTeX. Write plain text only.
+3. For ANY maths question use this exact format:
+PROBLEM: [one clear sentence]
+FORMULA: [formula name: expression in plain text]
+VARIABLES:
+[variable = meaning]
+STEPS:
+Step 1: [title] | [calculation] | [explanation]
+Step 2: [title] | [calculation] | [explanation]
+ANSWER: [final answer with units]
+4. For non-maths questions answer in plain prose only.`;
+
+// ── MATH CARD RENDERER ────────────────────────────────────────────────────────
+function isMathResponse(text) {
+    return /PROBLEM:/i.test(text) && /STEP/i.test(text) && /ANSWER:/i.test(text);
 }
 
+function parseMathResponse(text) {
+    const get = (label) => {
+        const re = new RegExp(label + ':?\\s*([\\s\\S]*?)(?=\\n[A-Z]+:|$)', 'i');
+        const m = text.match(re);
+        return m ? m[1].trim() : '';
+    };
+    const problem    = get('PROBLEM');
+    const formulaRaw = get('FORMULA');
+    const varsRaw    = get('VARIABLES');
+    const answerRaw  = get('ANSWER');
 
-        function typeMessage(role, message, speed = 40) {
-    const div = document.createElement('div');
-    div.className = `message ${role}`;
+    let formulaName = '', formulaExpr = '';
+    if (formulaRaw.includes(':')) {
+        [formulaName, formulaExpr] = formulaRaw.split(':').map(s => s.trim());
+    } else { formulaExpr = formulaRaw; }
 
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
+    const vars = varsRaw.split('\n').map(l => l.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
 
-    div.appendChild(contentDiv);
-    chatBox.appendChild(div);
-
-    let i = 0;
-
-    function typeChar() {
-        if (i < message.length) {
-            contentDiv.innerHTML += message.charAt(i);
-            i++;
-            setTimeout(typeChar, speed);
+    const stepsBlock = text.match(/STEPS?:([\s\S]*?)ANSWER:/i);
+    const steps = [];
+    if (stepsBlock) {
+        const lines = stepsBlock[1].trim().split('\n').filter(Boolean);
+        for (const line of lines) {
+            const m = line.match(/Step\s*\d+\s*:?\s*(.+)/i);
+            if (m) {
+                const parts = m[1].split('|').map(s => s.trim());
+                steps.push({ title: parts[0]||'', formula: parts[1]||'', note: parts[2]||'' });
+            }
         }
     }
 
-    typeChar();
+    const topicKeywords = [
+        ['circle','area','circumference','radius','diameter','pi'],
+        ['triangle','pythagoras','hypotenuse','sine','cosine','tangent'],
+        ['algebra','equation','solve','variable','quadratic','linear'],
+        ['percentage','percent','fraction','ratio'],
+        ['volume','surface area','cube','cylinder','sphere'],
+        ['probability','mean','median','mode','range'],
+        ['speed','distance','time','velocity'],
+        ['interest','profit','loss','cost'],
+    ];
+    const topicNames = ['Geometry','Trigonometry','Algebra','Percentages','3D Shapes','Statistics','Motion','Finance'];
+    let topic = 'Mathematics';
+    const lc = (problem + formulaRaw).toLowerCase();
+    for (let i = 0; i < topicKeywords.length; i++) {
+        if (topicKeywords[i].some(k => lc.includes(k))) { topic = topicNames[i]; break; }
+    }
+    return { problem, formulaName, formulaExpr, vars, steps, answer: answerRaw, topic };
+}
 
+function buildMathCard(data) {
+    const card = document.createElement('div');
+    card.className = 'math-card';
+    card.innerHTML = `
+        <div class="math-card-header">
+            <span class="math-topic-badge">📐 ${escapeHtml(data.topic)}</span>
+            <h4>Step-by-Step Workings</h4>
+        </div>
+        <div class="math-body">
+            ${data.problem ? `<div class="problem-box"><span class="prob-label">Problem</span>${escapeHtml(data.problem)}</div>` : ''}
+            ${data.formulaExpr ? `
+            <div class="formula-ref">
+                <div class="formula-ref-label">${data.formulaName ? escapeHtml(data.formulaName) + ' — Formula' : 'Formula'}</div>
+                <div class="formula-display">${escapeHtml(data.formulaExpr)}</div>
+                ${data.vars.length ? `<div class="formula-vars">${data.vars.map(v => {
+                    const [sym,...rest] = v.split('=');
+                    return `<div class="formula-var"><b>${escapeHtml(sym.trim())}</b>${rest.length?' = '+escapeHtml(rest.join('=').trim()):''}</div>`;
+                }).join('')}</div>` : ''}
+            </div>` : ''}
+            <div class="steps-list">
+                ${data.steps.map((s,i) => `
+                <div class="step-row">
+                    <div class="step-num">${i+1}</div>
+                    <div class="step-content">
+                        ${s.title ? `<div class="step-title">${escapeHtml(s.title)}</div>` : ''}
+                        ${s.formula ? `<div class="step-formula">${escapeHtml(s.formula)}</div>` : ''}
+                        ${s.note ? `<div class="step-note">${escapeHtml(s.note)}</div>` : ''}
+                    </div>
+                </div>`).join('')}
+            </div>
+            ${data.answer ? `
+            <div class="answer-box">
+                <div class="answer-checkmark">✓</div>
+                <div><div class="answer-label">Final Answer</div>
+                <div class="answer-value">${escapeHtml(data.answer)}</div></div>
+            </div>` : ''}
+        </div>`;
+    return card;
+}
+
+function renderAssistantMessage(text, sources) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message assistant';
+
+    // Restore newlines lost during streaming
+    const cleaned = text
+        .replace(/PROBLEM:/g, '\nPROBLEM:')
+        .replace(/FORMULA:/g, '\nFORMULA:')
+        .replace(/VARIABLES:/g, '\nVARIABLES:\n')
+        .replace(/STEPS:/g, '\nSTEPS:\n')
+        .replace(/Step (\d+):/g, '\nStep $1:')
+        .replace(/ANSWER:/g, '\nANSWER:')
+        .trim();
+
+    if (isMathResponse(cleaned)) {
+        const data = parseMathResponse(cleaned);
+        wrapper.style.cssText = 'background:transparent;border:none;padding:0;max-width:98%;';
+        wrapper.appendChild(buildMathCard(data));
+    } else {
+        const div = document.createElement('div');
+        // Prose: wrap naturally, preserve intentional line breaks only
+        div.style.whiteSpace = 'pre-wrap';
+        div.style.lineHeight = '1.7';
+        div.style.fontSize = '14px';
+        // Clean up any leftover math labels the model may have leaked
+        const prose = text
+            .replace(/^(PROBLEM|FORMULA|VARIABLES|STEPS|ANSWER):\s*/gim, '')
+            .replace(/^Step \d+:\s*/gim, '')
+            .trim();
+        div.textContent = prose;
+        wrapper.appendChild(div);
+    }
+
+    if (sources && sources.length) {
+        const badge = document.createElement('div');
+        badge.className = 'source-badge';
+        badge.textContent = `📄 ${sources.length} source${sources.length > 1 ? 's' : ''} — click to view`;
+        const sourceList = document.createElement('div');
+        sourceList.className = 'sources hidden-sources';
+        sources.forEach((s, i) => {
+            const item = document.createElement('div');
+            item.className = 'source-item';
+            item.textContent = `${i+1}. ${s.source_file||'Unknown'} • Page ${s.page||'?'}`;
+            sourceList.appendChild(item);
+        });
+        badge.onclick = () => sourceList.classList.toggle('hidden-sources');
+        wrapper.appendChild(badge);
+        wrapper.appendChild(sourceList);
+    }
+
+    chatBox.appendChild(wrapper);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
-        
-        // Load files on startup
-        window.addEventListener('load', () => {
-    loadFiles();
-    initializeSystem();
 
-    const hour = new Date().getHours();
+let currentUser         = localStorage.getItem('smartstudy_user') || null;
+let authMode            = 'login';
+let mediaRecorder;
+let audioChunks         = [];
+let currentSessionId    = null;
+let voiceSupportEnabled = false;
+let isRecording         = false;
 
-    let greeting = "Hello 👋";
-    if (hour < 12) greeting = "Good morning ☀️";
-    else if (hour < 18) greeting = "Good afternoon 🌤️";
-    else greeting = "Good evening 🌙";
+// ── AUTH MODAL ────────────────────────────────────────────────────────────────
+function showAuthModal(mode = 'login') {
+    authMode = mode;
+    _updateAuthModalUI();
+    document.getElementById('authError').style.display = 'none';
+    authOverlay.classList.add('open');
+    setTimeout(() => document.getElementById('authUsername').focus(), 100);
+}
 
-    const message = `${greeting} I'm your SmartStudy AI Tutor. What are we learning today?`;
+function hideAuthModal() {
+    authOverlay.classList.remove('open');
+}
 
-    setTimeout(() => {
-        typeMessage("assistant", message, 25);
-    }, 800);
-});
-        
-        // Send on Enter key
-        questionInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendQuestion();
-            }
+// Close when clicking the dark backdrop (not the modal itself)
+function handleOverlayClick(e) {
+    if (e.target === authOverlay) hideAuthModal();
+}
+
+// Close with Escape key
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideAuthModal(); });
+
+function toggleAuthMode() {
+    authMode = authMode === 'login' ? 'signup' : 'login';
+    _updateAuthModalUI();
+}
+
+function _updateAuthModalUI() {
+    const isLogin = authMode === 'login';
+    document.getElementById('authTitle').textContent       = isLogin ? 'Welcome back' : 'Create your account';
+    document.getElementById('authSubtitle').textContent    = isLogin
+        ? 'Login to save your progress and access all features.'
+        : 'Sign up for free — it only takes a moment.';
+    document.getElementById('authSubmitBtn').textContent   = isLogin ? 'Login' : 'Create Account';
+    document.getElementById('authToggleText').textContent  = isLogin ? "Don't have an account?" : 'Already have an account?';
+    document.getElementById('authToggleLink').textContent  = isLogin ? 'Sign up' : 'Login';
+    // Show/hide signup-only fields
+    document.querySelectorAll('.signup-field').forEach(el => {
+        el.classList.toggle('hidden', isLogin);
+    });
+}
+
+function submitAuth() {
+    authMode === 'login' ? loginUser() : signupUser();
+}
+
+async function loginUser() {
+    const username = document.getElementById('authUsername').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+    if (!username || !password) {
+        shakeModal();
+        addMessage('assistant', '⚠️ Please fill in your username and password.');
+        return;
+    }
+    const submitBtn = document.getElementById('authSubmitBtn');
+    submitBtn.textContent = 'Logging in…'; submitBtn.disabled = true;
+    try {
+        const res  = await fetch('/api/login', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({username, password})
         });
-        
-        function loadFiles() {
-            fetch('/api/files')
-                .then(r => r.json())
-                .then(data => {
-                    if (data.files.length === 0) {
-                        filesList.innerHTML = '<li>No PDFs found in data folder</li>';
-                    } else {
-                        filesList.innerHTML = data.files
-                            .map(f => `<li>✓ ${f}</li>`)
-                            .join('');
-                    }
-                })
-                .catch(err => console.error('Error loading files:', err));
+        const data = await res.json();
+        if (!data.success) {
+            submitBtn.textContent = 'Login'; submitBtn.disabled = false;
+            const errBox = document.getElementById('authError');
+            errBox.textContent = data.message || 'Wrong username or password. Please try again.';
+            errBox.style.display = 'block';
+            shakeModal(); return;
         }
-        
-        function initializeSystem() {
-            fetch('/api/initialize', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    if (!data.success) {
-                        addMessage('assistant', `Error: ${data.message}`);
-                    }
-                })
-                .catch(err => {
-                    addMessage('assistant', `Error initializing system: ${err.message}`);
-                });
+        currentUser = username.toLowerCase();
+        localStorage.setItem('smartstudy_user', currentUser);
+        hideAuthModal();
+        updateTopbarForUser(data.profile);
+        renderProfile(data.profile);
+        if (data.profile.role === 'admin') {
+            showAdminPanel();
+        } else {
+            addMessage('assistant', `Welcome back, ${data.profile.name || username}! 🎉 What would you like to study today?`);
         }
+    } catch(err) {
+        submitBtn.textContent = 'Login'; submitBtn.disabled = false;
+        addMessage('assistant', `⚠️ Login error: ${err.message}`);
+    }
+}
 
-      
-        async function uploadFile() {
-    let fileInput = document.getElementById("studyFile");
-    let file = fileInput.files[0];
+async function signupUser() {
+    const username = document.getElementById('authUsername').value.trim();
+    const password = document.getElementById('authPassword').value.trim();
+    const name     = document.getElementById('authName').value.trim();
+    const grade    = document.getElementById('authGrade').value.trim();
+    const role     = document.getElementById('authRole').value;
+    if (!username || !password || !name) {
+        shakeModal();
+        addMessage('assistant', '⚠️ Please fill in username, password, and your name.');
+        return;
+    }
+    const submitBtn = document.getElementById('authSubmitBtn');
+    submitBtn.textContent = 'Creating account…'; submitBtn.disabled = true;
+    try {
+        const res  = await fetch('/api/signup', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({username, password, name, grade, role})
+        });
+        const data = await res.json();
+        if (!data.success) {
+            submitBtn.textContent = 'Create Account'; submitBtn.disabled = false;
+            addMessage('assistant', `⚠️ ${data.message || 'Signup failed.'}`);
+            shakeModal(); return;
+        }
+        currentUser = username.toLowerCase();
+        localStorage.setItem('smartstudy_user', currentUser);
+        hideAuthModal();
+        updateTopbarForUser(data.profile);
+        renderProfile(data.profile);
+        if (data.profile.role === 'admin') {
+            showAdminPanel();
+        } else {
+            addMessage('assistant', `Welcome to SmartStudy, ${name}! 🎓 Your account is ready. What subject shall we start with?`);
+        }
+    } catch(err) {
+        submitBtn.textContent = 'Create Account'; submitBtn.disabled = false;
+        addMessage('assistant', `⚠️ Signup error: ${err.message}`);
+    }
+}
 
-    if (!file) {
-        alert("Please select a file first");
+function shakeModal() {
+    const m = document.getElementById('authModal');
+    m.style.animation = 'none';
+    requestAnimationFrame(() => {
+        m.style.animation = 'shake 0.6s ease';
+    });
+    setTimeout(() => { m.style.animation = 'none'; }, 700);
+}
+
+// Add shake keyframe once
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}10%{transform:translateX(-10px)}20%{transform:translateX(10px)}30%{transform:translateX(-10px)}40%{transform:translateX(10px)}50%{transform:translateX(-8px)}60%{transform:translateX(8px)}70%{transform:translateX(-5px)}80%{transform:translateX(5px)}90%{transform:translateX(-3px)}}';
+document.head.appendChild(shakeStyle);
+
+function logoutUser() {
+    currentUser = null;
+    localStorage.removeItem('smartstudy_user');
+
+    // Close admin panel if open
+    hideAdminPanel();
+
+    // Reset topbar
+    document.getElementById('topbarActions').innerHTML =
+        '<button class="button-secondary" onclick="showAuthModal(\'login\')">Login</button>';
+
+    // Show chat panel
+    document.getElementById('assistantPanel').classList.remove('hidden');
+
+    // Clear chat and show logout message
+    chatBox.innerHTML = '';
+    addMessage('assistant', 'You are now logged out. You can still ask questions as a guest.');
+}
+
+function updateTopbarForUser(profile) {
+    document.getElementById('topbarActions').innerHTML = `
+        <div class="user-chip">
+            <span class="dot"></span>
+            <span>${profile.name || currentUser}</span>
+        </div>`;
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────────────────
+function renderProfile(profile) {
+    if (!profile) return;
+}
+
+async function loadProfile() {
+    if (!currentUser) return;
+    try {
+        const res  = await fetch(`/api/profile?username=${encodeURIComponent(currentUser)}`);
+        const data = await res.json();
+       if (data.success) {
+            updateTopbarForUser(data.profile);
+            renderProfile(data.profile);
+            if (data.profile.role === 'admin') {
+                showAdminPanel();
+            }
+        }
+    } catch(e) { console.error(e); }
+}
+
+// ── GREETING ──────────────────────────────────────────────────────────────────
+function getTimeBasedGreeting() {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning! 🌅 Welcome to SmartStudy. Ready to start your learning journey today?";
+    if (h < 17) return "Good afternoon! ☀️ Let's continue building your knowledge with SmartStudy.";
+    return "Good evening! 🌙 Time to study and excel with SmartStudy.";
+}
+
+function isGreetingMessage(text) {
+    if (!text) return false;
+    return /^(hi|hey|hello|howdy|hiya|sup|greetings|good\s+(morning|afternoon|evening|night)|how\s+are\s+you|what'?s\s+up|howzit|maswera|mhoro|sawubona)\b/i.test(text.trim());
+}
+
+function buildGreetingReply() {
+    const h  = new Date().getHours();
+    const tg = h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : h < 21 ? "Good evening" : "Good night";
+    const closings = [
+        "How can I help you with your studies today?",
+        "What subject would you like to revise?",
+        "Ready to help you ace your exams — what shall we tackle?"
+    ];
+    return `${tg}! I'm doing great, thanks for asking 😊 ${closings[Math.floor(Math.random()*closings.length)]}`;
+}
+
+// ── MESSAGES ──────────────────────────────────────────────────────────────────
+function addMessage(role, content, sources = null) {
+    const msg = document.createElement('div');
+    msg.className = `message ${role}`;
+    let html = `<div>${escapeHtml(content)}</div>`;
+    if (sources && sources.length) {
+        html += `<div class="source-badge" onclick="toggleSourceList(this)">📄 ${sources.length} source${sources.length>1?'s':''} — click to view</div>`;
+        html += '<div class="sources hidden-sources">';
+        sources.forEach((s,i) => { html += `<div class="source-item">${i+1}. ${s.source_file||'Unknown'} • Page ${s.page||'?'}</div>`; });
+        html += '</div>';
+    }
+    msg.innerHTML = html;
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    saveChatMessage(role, content);
+}
+
+function animateAssistantMessage(text) {
+    const msg = document.createElement('div');
+    msg.className = 'message assistant';
+    const wrap = document.createElement('div');
+    msg.appendChild(wrap);
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    const words = text.split(' ');
+    const delay = Math.min(900 / Math.max(words.length, 1), 60);
+    words.forEach((word, i) => {
+        const span = document.createElement('span');
+        span.textContent = word;
+        span.style.cssText = `display:inline-block;opacity:0;transform:translateY(4px);
+            transition:opacity .09s ease,transform .09s ease;margin-right:.3em;`;
+        wrap.appendChild(span);
+        setTimeout(() => { span.style.opacity='1'; span.style.transform='translateY(0)'; }, i * delay);
+    });
+    saveChatMessage('assistant', text);
+}
+
+function toggleSourceList(el) { el.nextElementSibling?.classList.toggle('hidden-sources'); }
+function escapeHtml(t) { const d=document.createElement('div'); d.textContent=t; return d.innerHTML; }
+
+// ── SEND ──────────────────────────────────────────────────────────────────────
+async function sendQuestion() {
+    // If there is a pending file, upload it first
+    if (window._pendingFile) {
+        await uploadPendingFile();
         return;
     }
 
-    let formData = new FormData();
-    formData.append("file", file);
+    const question = questionInput.value.trim();
+    if (!question) return;
 
-    let response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-    });
+    // Always show user bubble first
+    addMessage('user', question);
+    questionInput.value = '';
 
-    let data = await response.json();
-
-    alert(data.message || data.error);
-
-    // refresh file list after upload
-    loadFiles();
-
-     fileInput.value = "";
-}
-        function sendQuestion() {
-            const question = questionInput.value.trim();
-            
-            if (!question) return;
-        
-        function typeMessage(role, message, speed = 40) {
-    const div = document.createElement('div');
-    div.className = `message ${role}`;
-
-    const contentDiv = document.createElement('div');
-    contentDiv.className = 'message-content';
-
-    div.appendChild(contentDiv);
-    chatBox.appendChild(div);
-
-    let i = 0;
-
-    function typeChar() {
-        if (i < message.length) {
-            contentDiv.innerHTML += message.charAt(i);
-            i++;
-            setTimeout(typeChar, speed);
-        }
+    // Greetings: reply instantly, no server call needed
+    if (isGreetingMessage(question)) {
+        setTimeout(() => animateAssistantMessage(buildGreetingReply()), 300);
+        return;
     }
 
-    typeChar();
+    sendBtn.disabled = true;
 
+    // Create the assistant bubble immediately — words will appear inside it
+    const streamMsg = document.createElement('div');
+    streamMsg.className = 'message assistant';
+    const streamContent = document.createElement('span');
+    streamMsg.appendChild(streamContent);
+    chatBox.appendChild(streamMsg);
     chatBox.scrollTop = chatBox.scrollHeight;
-}
-            // Add user message
-            addMessage('user', question);
-            questionInput.value = '';
-            sendBtn.disabled = true;
-            
-            // Add loading indicator
-            const loadingId = 'loading-' + Date.now();
-            chatBox.innerHTML += `<div id="${loadingId}" class="message assistant"><div class="message-content loading">Thinking...</div></div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-            
-            // Send request
-            fetch('/api/ask', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question })
+
+    // Show three dots while waiting for first token
+    streamContent.innerHTML = '<div class="thinking-cursor"><span></span><span></span><span></span></div>';
+
+    let fullText = '';
+    let firstToken = true;
+
+    try {
+        const res = await fetch('/api/ask/stream', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                question,
+                username: currentUser,
+                language: languageSelect.value || 'en', system_prompt: MATH_SYSTEM_PROMPT
             })
-            .then(r => r.json())
-            .then(data => {
-                document.getElementById(loadingId).remove();
-                
-                if (data.error) {
-                    addMessage('assistant', `Error: ${data.error}`);
-                } else {
-                    addMessage('assistant', data.answer, data.sources);
-                }
-                
-                sendBtn.disabled = false;
-                questionInput.focus();
-            })
-            .catch(err => {
-                document.getElementById(loadingId).remove();
-                addMessage('assistant', `Error: ${err.message}`);
-                sendBtn.disabled = false;
-            });
-        }
-        
-        function addMessage(role, content, sources = null) {
-            const div = document.createElement('div');
-            div.className = `message ${role}`;
-            
-            let html = `<div class="message-content">${escapeHtml(content)}`;
-            
-            if (sources && sources.length > 0) {
-                html += '<div class="sources"><strong>📚 Sources:</strong>';
-                sources.forEach((s, i) => {
-                    const file = s.source_file || 'Unknown';
-                    const page = s.page || '?';
-                    html += `<div class="source-item">[${i+1}] ${file} - Page ${page}</div>`;
-                });
-                html += '</div>';
+        });
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const text = decoder.decode(value);
+            const lines = text.split('\n');
+
+            for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                try {
+                    const payload = JSON.parse(line.slice(6));
+
+                    if (firstToken && payload.token) {
+                        // Replace the spinner with real text on first token
+                        streamContent.textContent = '';
+                        firstToken = false;
+                    }
+
+                    if (payload.token) {
+                        fullText += payload.token;
+                        streamContent.textContent = fullText;
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+if (payload.done) {
+                        streamMsg.remove();
+
+                        // Only re-inject newlines if this looks like a math response.
+                        // For plain prose, leave it exactly as streamed.
+                        const looksLikeMath = /\bPROBLEM:/i.test(fullText) ||
+                                              /\bFORMULA:/i.test(fullText) ||
+                                              /\bSTEPS:/i.test(fullText);
+
+                        let finalText = fullText;
+                        if (looksLikeMath) {
+                            finalText = fullText
+                                .replace(/\bPROBLEM:/g,    '\nPROBLEM:')
+                                .replace(/\bFORMULA:/g,    '\nFORMULA:')
+                                .replace(/\bVARIABLES:/g,  '\nVARIABLES:\n')
+                                .replace(/\bSTEPS:/g,      '\nSTEPS:\n')
+                                .replace(/\bStep (\d+):/g, '\nStep $1:')
+                                .replace(/\bANSWER:/g,     '\nANSWER:')
+                                .trim();
+                        }
+
+                        renderAssistantMessage(finalText, null);
+                        saveChatMessage('assistant', finalText);
+                    }
+                } catch(e) {}
             }
-            
-            html += '</div>';
-            div.innerHTML = html;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
-        
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+    } catch (err) {
+        streamContent.textContent = `Error: ${err.message}`;
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+
+// ── VOICE ─────────────────────────────────────────────────────────────────────
+async function toggleVoiceSupport() {
+    if (!voiceSupportEnabled) {
+        voiceSupportEnabled = true; voiceToggleBtn.classList.add('active');
+        await startRecording();
+    } else {
+        voiceSupportEnabled = false; voiceToggleBtn.classList.remove('active');
+        if (isRecording) await stopRecording();
+    }
+}
+
+async function startRecording() {
+    if (isRecording) return;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.start(); isRecording = true;
+        const ind = document.createElement('div');
+        ind.id = 'speaking-indicator'; ind.className = 'message assistant';
+        ind.innerHTML = '<div class="speaking-animation">🎤 Listening… Tap mic again to stop.</div>';
+        chatBox.appendChild(ind); chatBox.scrollTop = chatBox.scrollHeight;
+    } catch(err) { addMessage('assistant', `Recording failed: ${err.message}`); }
+}
+
+async function stopRecording() {
+    if (!mediaRecorder || !isRecording) return;
+    isRecording = false;
+    const ind = document.getElementById('speaking-indicator');
+    if (ind) ind.innerHTML = '<div class="speaking-animation">⏹️ Processing…</div>';
+    mediaRecorder.onstop = async () => {
+        const blob = new Blob(audioChunks, { type:'audio/webm' });
+        const fd   = new FormData();
+        fd.append('file', blob, 'voice.webm');
+        fd.append('language', languageSelect.value||'en');
+        fd.append('username', currentUser||'');
+        if (ind) ind.remove();
+        try {
+            const res  = await fetch('/api/voice', { method:'POST', body: fd });
+            const data = await res.json();
+            if (data.error) { addMessage('assistant', `Error: ${data.error}`); return; }
+            addMessage('user', data.text);
+            if (isGreetingMessage(data.text)) { animateAssistantMessage(buildGreetingReply()); }
+            else {
+                addMessage('assistant', data.answer);
+                if (data.audio)   new Audio(data.audio).play().catch(()=>{});
+                if (data.profile) renderProfile(data.profile);
+            }
+        } catch(err) { addMessage('assistant', `Error: ${err.message}`); }
+    };
+    mediaRecorder.stop();
+}
+
+// ── SYSTEM ────────────────────────────────────────────────────────────────────
+async function initializeSystem() {
+    try {
+        const res  = await fetch('/api/initialize', { method:'POST' });
+        const data = await res.json();
+        if (!data.success) addMessage('assistant', `⚠️ System error: ${data.message}`);
+    } catch(err) { addMessage('assistant', `Init failed: ${err.message}`); }
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+async function showAdminPanel() {
+    if (!currentUser) { addMessage('assistant','⚠️ Please login first.'); return; }
+    document.getElementById('adminPanel').classList.remove('hidden');
+    document.getElementById('assistantPanel').classList.add('hidden');
+    await loadAdminData();
+}
+function hideAdminPanel() { 
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('assistantPanel').classList.remove('hidden');
+}
+
+
+function showAdminTab(name, btn) {
+    document.getElementById('adminUsersTab').classList.add('hidden');
+    document.getElementById('adminFilesTab').classList.add('hidden');
+    document.getElementById('adminStatsTab').classList.add('hidden');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const tabId = name === 'users' ? 'adminUsersTab' : name === 'files' ? 'adminFilesTab' : 'adminStatsTab';
+    document.getElementById(tabId).classList.remove('hidden');
+    if (btn) btn.classList.add('active');
+}
+async function loadAdminData() {
+    try {
+        const res  = await fetch(`/api/admin/dashboard?username=${encodeURIComponent(currentUser)}`);
+        const data = await res.json();
+        if (!data.success) { addMessage('assistant','⚠️ Admin access denied.'); return; }
+
+        // USERS TAB
+        document.getElementById('adminUsersList').innerHTML = data.users.length === 0
+            ? '<p class="small-note">No users found.</p>'
+            : data.users.map(u => `
+                <div style="display:flex; justify-content:space-between;
+                     align-items:center; padding:14px 16px; background:#f7f7ff;
+                     border-radius:12px; border:1px solid rgba(102,126,234,0.15);
+                     margin-bottom:10px;">
+                    <div>
+                        <strong style="color:var(--text);">${escapeHtml(u.name || u.username)}</strong>
+                        <span style="margin-left:8px; background:rgba(102,126,234,0.15);
+                              color:var(--purple-dark); border-radius:6px;
+                              padding:2px 8px; font-size:11px; font-weight:600;">
+                            ${u.role}
+                        </span><br>
+                        <small style="color:var(--text-muted);">
+                            @${u.username} • ${u.grade} • Activities: ${u.activity_count}
+                        </small>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                        <button onclick="adminChangeRole('${escapeHtml(u.username)}','${u.role}')"
+                            style="background:rgba(102,126,234,0.1); color:#564ab1;
+                                   border:1px solid rgba(102,126,234,0.2);
+                                   padding:6px 10px; border-radius:8px;
+                                   font-size:12px; cursor:pointer;">
+                            👤 Role
+                        </button>
+                        <button onclick="adminResetPassword('${escapeHtml(u.username)}')"
+                            style="background:rgba(255,193,7,0.1); color:#856404;
+                                   border:1px solid rgba(255,193,7,0.3);
+                                   padding:6px 10px; border-radius:8px;
+                                   font-size:12px; cursor:pointer;">
+                            🔑 Password
+                        </button>
+                        <button onclick="adminDeleteUser('${escapeHtml(u.username)}')"
+                            style="background:rgba(220,53,69,0.1); color:#dc3545;
+                                   border:1px solid rgba(220,53,69,0.2);
+                                   padding:6px 10px; border-radius:8px;
+                                   font-size:12px; cursor:pointer;">
+                            🗑 Delete
+                        </button>
+                    </div>
+                </div>`).join('');
+
+        // FILES TAB
+        document.getElementById('adminFilesList').innerHTML = data.files.length === 0
+            ? '<p class="small-note">No files uploaded yet.</p>'
+            : data.files.map(f => {
+                const ext = f.split('.').pop().toLowerCase();
+                const icons = {pdf:'📕',doc:'📝',docx:'📝',ppt:'📊',pptx:'📊',xls:'📗',xlsx:'📗',txt:'📄',csv:'📋'};
+                const icon = icons[ext] || '📄';
+                const types = {pdf:'PDF Document',doc:'Word Document',docx:'Word Document',ppt:'PowerPoint',pptx:'PowerPoint',xls:'Excel',xlsx:'Excel',txt:'Text File',csv:'CSV File'};
+                const type = types[ext] || 'Document';
+                const canView = true;
+                return `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:#f7f7ff;border-radius:12px;border:1px solid rgba(102,126,234,0.15);margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:26px;">${icon}</span>
+                        <div>
+                            <div style="font-weight:600;color:#202124;font-size:14px;">${escapeHtml(f)}</div>
+                            <div style="font-size:12px;color:#5f6368;">${type}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        ${canView ? `
+                        <button onclick="viewAdminFile('${escapeHtml(f)}')"
+                            style="background:rgba(102,126,234,0.1);color:#564ab1;border:1px solid rgba(102,126,234,0.2);
+                            padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;">
+                            👁 View
+                        </button>` : ''}
+                        <button onclick="deleteAdminFile('${escapeHtml(f)}')"
+                            style="background:rgba(220,53,69,.1);color:#dc3545;border:1px solid rgba(220,53,69,.2);
+                            padding:6px 12px;border-radius:8px;font-size:13px;cursor:pointer;">
+                            🗑 Delete
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+
+        // STATS TAB
+        document.getElementById('adminStats').innerHTML = `
+            <div class="stat-card"><h3>${data.total_users}</h3><p>Total Users</p></div>
+            <div class="stat-card"><h3>${data.total_files}</h3><p>Uploaded Files</p></div>
+            <div class="stat-card"><h3>${data.users.filter(u=>u.role==='student').length}</h3><p>Students</p></div>
+            <div class="stat-card"><h3>${data.users.filter(u=>u.role==='teacher').length}</h3><p>Teachers</p></div>
+            <div class="stat-card"><h3>${data.users.filter(u=>u.role==='admin').length}</h3><p>Admins</p></div>`;
+
+    } catch(e) { 
+        console.error(e); 
+        addMessage('assistant', '⚠️ Error loading admin data.');
+    }
+}
+
+async function deleteAdminFile(filename) {
+    if (!confirm(`Delete "${filename}"?`)) return;
+    const res  = await fetch(`/api/admin/delete-file?username=${encodeURIComponent(currentUser)}`,
+        { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({filename}) });
+    const data = await res.json();
+    addMessage('assistant', data.success ? `✅ ${filename} deleted.` : `⚠️ ${data.message}`);
+    if (data.success) loadAdminData();
+}
+
+// ── MISC ──────────────────────────────────────────────────────────────────────
+function saveChatMessage(role, content) {
+    try {
+        const chats = JSON.parse(localStorage.getItem('smartstudy_chats') || '[]');
+        chats.push({ role, content, timestamp: new Date().toISOString(), user: currentUser||'guest' });
+        if (chats.length > 200) chats.splice(0, chats.length - 200);
+        localStorage.setItem('smartstudy_chats', JSON.stringify(chats));
+    } catch(e) {}
+}
+
+async function syncTeacher() {
+    const res  = await fetch('/api/sync', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({username:currentUser, online:navigator.onLine}) });
+    const data = await res.json();
+    addMessage('assistant', data.message || 'Sync completed.');
+}
+
+function downloadSharePack() {
+    if (!currentUser) { addMessage('assistant','⚠️ Login first to export.'); return; }
+    fetch(`/api/share?username=${encodeURIComponent(currentUser)}`).then(r=>r.json()).then(data => {
+        if (!data.success) { addMessage('assistant','⚠️ Unable to export.'); return; }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(data.share_data,null,2)],{type:'application/json'}));
+        a.download = `smartstudy-share-${currentUser}.json`; a.click();
+    });
+}
+
+function importSharePack(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+        try {
+            const shareData = JSON.parse(reader.result);
+            const res  = await fetch('/api/import-share', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({username:currentUser, share_data:shareData}) });
+            const data = await res.json();
+            addMessage('assistant', data.message || 'Import complete');
+        } catch(e) { addMessage('assistant','⚠️ Unable to read shared file.'); }
+    };
+    reader.readAsText(file);
+}
+
+function uploadInlineFile(input) {
+    const file = input.files[0]; 
+    if (!file) return;
+
+    // Show attachment preview in input bar
+    const preview = document.getElementById('attachmentPreview');
+    const nameEl  = document.getElementById('attachmentName');
+    const statusEl = document.getElementById('attachmentStatus');
+    const progressEl = document.getElementById('attachmentProgress');
+    const bar = document.getElementById('progressBar');
+
+    nameEl.textContent = file.name;
+    statusEl.textContent = 'Ready to upload — press Send or wait...';
+    preview.style.display = 'flex';
+    progressEl.style.display = 'none';
+    bar.style.width = '0%';
+
+    // Store file for sending
+    window._pendingFile = file;
+    input.value = '';
+}
+
+function clearAttachment() {
+    document.getElementById('attachmentPreview').style.display = 'none';
+    window._pendingFile = null;
+}
+
+async function uploadPendingFile() {
+    const file = window._pendingFile;
+    if (!file) return;
+
+    const nameEl   = document.getElementById('attachmentName');
+    const statusEl = document.getElementById('attachmentStatus');
+    const progressEl = document.getElementById('attachmentProgress');
+    const bar = document.getElementById('progressBar');
+
+    statusEl.textContent = 'Uploading...';
+    progressEl.style.display = 'block';
+
+    // Animate progress bar
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += 10;
+        bar.style.width = Math.min(progress, 90) + '%';
+        if (progress >= 90) clearInterval(interval);
+    }, 200);
+
+    try {
+        const fd = new FormData();
+        fd.append('file', file);
+        const res  = await fetch('/api/upload', { method: 'POST', body: fd });
+        const data = await res.json();
+
+        clearInterval(interval);
+        bar.style.width = '100%';
+
+        if (data.success || data.message) {
+            statusEl.style.color = '#4ade80';
+            statusEl.textContent = 'Uploaded successfully — system is processing...';
+            nameEl.style.color = '#4ade80';
+
+            setTimeout(() => {
+                document.getElementById('attachmentPreview').style.display = 'none';
+                window._pendingFile = null;
+                addMessage('assistant', `✅ "${file.name}" has been uploaded and added to the knowledge base. You can now ask questions about it!`);
+            }, 1500);
+        } else {
+            statusEl.style.color = '#ff6b6b';
+            statusEl.textContent = `Failed: ${data.error || 'Upload error'}`;
         }
-    </script>
+    } catch(e) {
+        clearInterval(interval);
+        statusEl.style.color = '#ff6b6b';
+        statusEl.textContent = `Error: ${e.message}`;
+    }
+}
+
+async function generateAdaptiveQuiz() {
+    if (!currentUser) {
+        addMessage('assistant', '⚠️ Please login to take a quiz.');
+        return;
+    }
+    // Save current topic hint for quiz page
+    const recentTopic = 'General';
+    localStorage.setItem(`smartstudy_last_topic_${currentUser}`, recentTopic);
+    // Open quiz page
+    window.location.href = '/quiz';
+}
+
+function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); }
+function closeDrawer()  { document.getElementById('sideDrawer').classList.remove('open'); }
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    questionInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); }
+    });
+    if (currentUser) loadProfile();
+    initializeSystem();
+    setTimeout(() => animateAssistantMessage(getTimeBasedGreeting()), 300);
+});
+
+async function adminUploadFile() {
+    const input  = document.getElementById('adminUploadFile');
+    const status = document.getElementById('adminUploadStatus');
+    const file   = input.files[0];
+    if (!file) { status.style.color='#dc3545'; status.textContent='Please select a file.'; return; }
+    status.style.color='#888'; status.textContent=`Uploading ${file.name}…`;
+    const fd = new FormData(); fd.append('file', file);
+    try {
+        const res  = await fetch('/api/upload', { method:'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+            status.style.color='var(--success)'; status.textContent=`✓ ${file.name} uploaded`;
+            input.value=''; loadAdminData();
+        } else {
+            status.style.color='#dc3545'; status.textContent=`Error: ${data.error}`;
+        }
+    } catch(e) { status.style.color='#dc3545'; status.textContent=`Error: ${e.message}`; }
+}
+
+
+function viewAdminFile(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    
+    if (ext === 'pdf') {
+        window.open(`/view-file/${encodeURIComponent(filename)}`, '_blank');
+    
+    } else if (ext === 'txt' || ext === 'csv') {
+        fetch(`/view-file/${encodeURIComponent(filename)}`)
+            .then(r => r.text())
+            .then(content => {
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <html><head><title>${filename}</title>
+                    <style>body{font-family:Arial;padding:20px;white-space:pre-wrap;line-height:1.6;background:#f9f9f9;}</style>
+                    </head><body><h2>📄 ${filename}</h2><hr><pre>${content}</pre></body></html>
+                `);
+            })
+            .catch(() => addMessage('assistant', '⚠️ Could not load file.'));
+
+    } else if (['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(ext)) {
+        const fileUrl = `http://localhost:5000/view-file/${encodeURIComponent(filename)}`;
+        const googleViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+        const win = window.open('', '_blank');
+        win.document.write(`
+            <html><head><title>${filename}</title>
+            <style>body{margin:0;padding:0;} iframe{width:100%;height:100vh;border:none;}</style>
+            </head><body>
+            <iframe src="${googleViewerUrl}"></iframe>
+            </body></html>
+        `);
+
+    } else {
+        const win = window.open('', '_blank');
+        win.document.write(`
+            <html><head><title>${filename}</title>
+            <style>body{font-family:Arial;padding:40px;text-align:center;}</style>
+            </head><body>
+            <h2>📄 ${filename}</h2>
+            <p>This file type cannot be previewed in the browser.</p>
+            <a href="/view-file/${encodeURIComponent(filename)}" download="${filename}"
+                style="background:#667eea;color:white;padding:12px 24px;border-radius:12px;text-decoration:none;font-weight:600;">
+                ⬇ Download File
+            </a>
+            </body></html>
+        `);
+    }
+}
+
+// ── ADMIN USER MANAGEMENT ─────────────────────────────────────────────────
+
+async function adminCreateUser() {
+    const status = document.getElementById('createUserStatus');
+    const body = {
+        admin_username: currentUser,
+        username: document.getElementById('newUsername').value.trim(),
+        password: document.getElementById('newPassword').value.trim(),
+        name:     document.getElementById('newName').value.trim(),
+        grade:    document.getElementById('newGrade').value.trim() || 'Form 1',
+        role:     document.getElementById('newRole').value
+    };
+    if (!body.username || !body.password || !body.name) {
+        status.style.color = '#dc3545';
+        status.textContent = 'Username, password and name are required.';
+        return;
+    }
+    status.style.color = '#888';
+    status.textContent = 'Creating...';
+    try {
+        const res  = await fetch('/api/admin/users/create', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        status.style.color = data.success ? 'var(--success)' : '#dc3545';
+        status.textContent  = data.message;
+        if (data.success) {
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('newName').value     = '';
+            document.getElementById('newGrade').value    = '';
+            loadAdminData();
+        }
+    } catch(e) {
+        status.style.color = '#dc3545';
+        status.textContent = `Error: ${e.message}`;
+    }
+}
+
+async function adminDeleteUser(username) {
+    if (!confirm(`Delete account "${username}"? This cannot be undone.`)) return;
+    try {
+        const res  = await fetch('/api/admin/users/delete', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ admin_username: currentUser, target_username: username })
+        });
+        const data = await res.json();
+        addMessage('assistant', data.success ? `✅ ${data.message}` : `⚠️ ${data.message}`);
+        if (data.success) loadAdminData();
+    } catch(e) { addMessage('assistant', `⚠️ Error: ${e.message}`); }
+}
+
+async function adminResetPassword(username) {
+    const newPw = prompt(`Enter new password for "${username}":`);
+    if (!newPw) return;
+    try {
+        const res  = await fetch('/api/admin/users/reset-password', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+                admin_username: currentUser,
+                target_username: username,
+                new_password: newPw
+            })
+        });
+        const data = await res.json();
+        addMessage('assistant', data.success ? `✅ ${data.message}` : `⚠️ ${data.message}`);
+    } catch(e) { addMessage('assistant', `⚠️ Error: ${e.message}`); }
+}
+
+async function adminChangeRole(username, currentRole) {
+    const roles  = ['student', 'teacher', 'admin'];
+    const newRole = prompt(
+        `Change role for "${username}".\nCurrent: ${currentRole}\nEnter new role: student / teacher / admin`
+    );
+    if (!newRole || !roles.includes(newRole.toLowerCase())) {
+        addMessage('assistant', '⚠️ Invalid role. Must be student, teacher, or admin.');
+        return;
+    }
+    try {
+        const res  = await fetch('/api/admin/users/update', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({
+                admin_username:  currentUser,
+                target_username: username,
+                role: newRole.toLowerCase()
+            })
+        });
+        const data = await res.json();
+        addMessage('assistant', data.success ? `✅ ${data.message}` : `⚠️ ${data.message}`);
+        if (data.success) loadAdminData();
+    } catch(e) { addMessage('assistant', `⚠️ Error: ${e.message}`); }
+}
+</script>
 </body>
 </html>

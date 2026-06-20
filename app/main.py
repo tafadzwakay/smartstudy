@@ -54,7 +54,7 @@ while True:
         print("\nAnswer:", answer.strip())
         
         # Get source documents for citation
-        sources = retriever.invoke(query)
+        sources = retriever.get_relevant_documents(query)
         
         if sources:
             formatted = format_sources(sources)

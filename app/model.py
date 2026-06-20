@@ -1,6 +1,6 @@
-# Fix SSL/TLS issue on Windows
 import ssl
 import os
+
 os.environ['CURL_CA_BUNDLE'] = ''
 os.environ['REQUESTS_CA_BUNDLE'] = ''
 
@@ -13,25 +13,29 @@ else:
 
 from langchain_community.llms import Ollama
 
-system_prompt = """
-You are SMARTSTUDY, a strict Zimbabwean AI tutor.
-
+system_prompt = """You are SMARTSTUDY, a ZIMSEC tutor.
 RULES:
-- Answer ONLY using provided notes/context
-- DO NOT generate stories or conversations
-- DO NOT write "User:" or "Assistant:"
-- DO NOT continue beyond the answer
-- If not in notes, say: "Not found in notes."
-- Keep answers short and clear
-"""
+- Answer ONLY using the provided context
+- Keep answers short and clear (2-4 sentences max)
+- If not in context, say: "Not found in notes."
+- Never write "User:" or "Assistant:"
+- Never add notes or disclaimers about missing context"""
+
+_llm_instance = None
 
 def load_model():
-  llm = Ollama(
-    model="gemma:2b",
-    temperature=0.3,
-    num_predict=150,
-    top_k=40,
-    top_p=0.9,
-    system=system_prompt
+    global _llm_instance
+    if _llm_instance is not None:
+        return _llm_instance
+
+    _llm_instance = Ollama(
+        model="gemma:2b",
+        temperature=0.1,
+        num_predict=300,
+        num_ctx=2048,
+        top_k=20,
+        top_p=0.85,
+        repeat_penalty=1.1,
+        system=system_prompt,
     )
-  return llm
+    return _llm_instance

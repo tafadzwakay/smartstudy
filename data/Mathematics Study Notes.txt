@@ -1,0 +1,204 @@
+Comprehensive Mathematics Notes (Forms 1–4, based on Zimbabwe syllabus)
+Overview
+These notes are organized in exam-revision style and cover the major Forms 1–4 mathematics syllabus areas: number systems, algebra, geometry, mensuration, trigonometry, statistics, probability, graphs, and transformations. Each section includes definitions, formulas, worked examples, and exam tips.
+ 
+FORM 1 MATHEMATICS
+Chapter 1: Real Numbers and Operations
+1.1 Number Systems
+Real numbers include:
+•	Natural numbers: 1, 2, 3, ...
+•	Whole numbers: 0, 1, 2, 3, ...
+•	Integers: ..., -2, -1, 0, 1, 2, ...
+•	Rational numbers: can be expressed as p/q where q  0
+•	Irrational numbers: cannot be written as exact fractions (e.g. 2, π)
+Laws of operations
+•	BODMAS: Brackets, Orders, Division, Multiplication, Addition, Subtraction
+•	Commutative law: a + b = b + a
+•	Associative law: (a + b) + c = a + (b + c)
+•	Distributive law: a(b + c) = ab + ac
+Standard form
+A number in scientific notation:
+• a × 10^n, where 1  a < 10
+Example: 450000 = 4.5 × 10^5 0.0032 = 3.2 × 10^-3
+ 
+Chapter 2: Fractions, Ratios, Percentages
+Key formulas
+•	Percentage = (part / whole) × 100
+•	Profit = selling price  cost price
+•	Profit % = (profit / cost price) × 100
+•	Simple interest = PRT / 100
+Example
+Find 20% of 360: 20/100 × 360 = 72
+ 
+Chapter 3: Algebraic Expressions
+Terms
+•	Constant: fixed value
+•	Variable: unknown represented by letters
+•	Coefficient: numerical multiplier
+Simplification
+3x + 2x  x = 4x 2a + 3b cannot be simplified further
+Expansion
+a(b + c) = ab + ac
+Example: 3(x + 4) = 3x + 12
+ 
+FORM 2 MATHEMATICS
+Chapter 4: Linear Equations
+Formula
+ax + b = c x = (c  b)/a
+Example
+3x + 5 = 17 3x = 12 x = 4
+Simultaneous equations
+Method: substitution or elimination
+Example: x + y = 8 x  y = 2 Add equations: 2x = 10 x = 5, y = 3
+ 
+Chapter 5: Geometry
+Angle facts
+•	Straight line = 180°
+•	Around a point = 360°
+•	Triangle sum = 180°
+•	Quadrilateral sum = 360°
+Parallel lines
+•	Alternate angles are equal
+•	Corresponding angles are equal
+•	Co-interior angles sum to 180°
+ 
+FORM 3 MATHEMATICS
+Chapter 6: Quadratic Equations
+General form
+ax² + bx + c = 0
+Factorisation
+x² + 5x + 6 = 0 (x + 2)(x + 3) = 0 x = -2 or -3
+Quadratic formula
+x = (-b ± (b²  4ac)) / 2a
+Discriminant
+D = b²  4ac
+•	D > 0 two real roots
+•	D = 0 equal roots
+•	D < 0 no real roots
+ 
+Chapter 7: Trigonometry
+Right-angled triangle SOH CAH TOA:
+•	sin θ = opposite/hypotenuse
+•	cos θ = adjacent/hypotenuse
+•	tan θ = opposite/adjacent
+Pythagoras theorem
+a² + b² = c²
+Example
+Sides 3 and 4: c² = 3² + 4² = 25 c = 5
+Sine rule
+a/sinA = b/sinB = c/sinC Cosine rule
+c² = a² + b²  2ab cos C
+ 
+FORM 4 MATHEMATICS
+Chapter 8: Mensuration
+Perimeter and area
+Rectangle:
+•	Area = l × w
+•	Perimeter = 2(l + w) Triangle:
+•	Area = 1/2 bh Circle:
+•	Area = πr²
+•	Circumference = 2πr
+Solids
+Cylinder:
+•	Volume = πr²h Cone:
+•	Volume = 1/3 πr²h
+Sphere:
+•	Volume = 4/3 πr³
+•	Surface area = 4πr²
+ 
+Chapter 9: Graphs and Functions
+Gradient
+m = (y₂  y₁)/(x₂  x₁)
+Equation of straight line y = mx + c where:
+•	m = gradient
+•	c = y-intercept
+Distance between two points
+[(x₂x₁)² + (y₂y₁)²]
+Midpoint
+((x₁+x₂)/2, (y₁+y₂)/2)
+ 
+Chapter 10: Statistics
+Mean
+Mean = sum of values / number of values
+Median
+Middle value after arranging data
+Mode
+Most frequent value
+Range
+Highest  lowest
+Frequency tables
+Use tally marks and cumulative frequencies.
+Chapter 11: Probability
+Formula
+P(E) = number of favorable outcomes / total outcomes
+0  P(E)  1
+Example
+Rolling a die, probability of getting 3: 1/6
+Complement: P(not E) = 1  P(E)
+ 
+Chapter 12: Transformations
+•	Translation
+•	Reflection
+•	Rotation
+•	Enlargement
+Important: Know image coordinates after transformation on Cartesian plane.
+ 
+Exam Strategies
+1.	Always write formulas first before substituting values.
+2.	Show all working; marks are awarded for method.
+3.	Use correct units (cm², m³, degrees).
+4.	Practice calculator use carefully.
+5.	Memorize all core formulas.
+Essential Formula Sheet
+•	Percentage = part/whole × 100
+•	Simple interest = PRT/100
+•	a² + b² = c²
+•	sinθ = opp/hyp
+•	cosθ = adj/hyp
+•	tanθ = opp/adj
+•	Area(circle) = πr²
+•	Circumference = 2πr
+•	Volume(cylinder) = πr²h
+•	x = (-b ± (b²  4ac))/2a
+•	y = mx + c
+•	Mean = Σx / n
+•	P(E) = favorable / total
+Worked Exercises and Answers (All Chapters)
+Chapter 1: Real Numbers
+1.	Write 0.00056 in standard form. Answer: 5.6 × 10^-4
+2.	Evaluate: 3 + 6 ÷ 2 × 4 Answer: 3 + 12 = 15
+Chapter 2: Fractions, Ratios, Percentages
+1.	Simplify 18:24 Answer: 3:4
+2.	Find 35% of 480 Answer: (35/100) × 480 = 168
+Chapter 3: Algebra
+1.	Simplify 4x + 7x  3x Answer: 8x
+2.	Expand 5(2x + 3) Answer: 10x + 15
+Chapter 4: Linear Equations
+1.	Solve: 2x + 9 = 19 Answer: 2x = 10, x = 5
+2.	Solve simultaneously: x + y = 9 x  y = 1 Answer: x = 5, y = 4
+Chapter 5: Geometry
+1.	Find missing angle in triangle: 65°, 45°, x Answer: x = 180  110 = 70°
+2.	Angles on a straight line: 120°, x Answer: x = 60°
+Chapter 6: Quadratic Equations
+1.	Solve x²  7x + 12 = 0 Answer: (x3)(x4)=0, x=3 or 4
+2.	Solve x² = 49 Answer: x = ±7
+Chapter 7: Trigonometry
+1.	Hypotenuse when sides are 6 and 8 Answer: c = (36+64)=10
+2.	Find sinθ if opposite = 5, hypotenuse = 13 Answer: 5/13
+Chapter 8: Mensuration
+1.	Area of rectangle 12 cm by 7 cm Answer: 84 cm²
+2.	Volume of cylinder r=3 cm, h=10 cm Answer: π × 3² × 10 = 90π cm³
+Chapter 9: Graphs
+1.	Find gradient between (2,3) and (6,11) Answer: (113)/(62)=2
+2.	Equation with gradient 3 and intercept 4 Answer: y = 3x + 4
+Chapter 10: Statistics
+1.	Mean of 4, 6, 8, 10 Answer: 7
+2.	Mode of 2, 3, 3, 4, 5 Answer: 3
+Chapter 11: Probability
+1.	Probability of drawing a red card from 52-card deck Answer: 26/52 = 1/2
+2.	Probability of getting an even number on a die Answer: 3/6 = 1/2
+Chapter 12: Transformations
+1.	Translate (2,3) by vector (4,1) Answer: (6,2)
+2.	Reflect point (3,2) in x-axis Answer: (3,2)
+Revision Advice
+Attempt each exercise before checking the answer. Rewrite difficult problems and practice similar ones until you can solve them without looking at the solution.

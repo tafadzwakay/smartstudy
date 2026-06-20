@@ -2,11 +2,19 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_community.retrievers import BM25Retriever
-from langchain.chains import RetrievalQA
-from langchain.agents import tool, AgentExecutor, create_react_agent
+from langchain_classic.chains import RetrievalQA
+from langchain_classic.agents import tool, AgentExecutor, create_react_agent
 from langchain_core.prompts import PromptTemplate
 from app.model import load_model
-from langchain.memory import ConversationBufferMemory
+from langchain_classic.memory import ConversationBufferMemory
+
+import chromadb
+from chromadb.config import Settings
+import os
+
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["HF_DATASETS_OFFLINE"] = "1"
+
 
 
 def format_sources(source_documents):
@@ -16,7 +24,6 @@ def format_sources(source_documents):
     
     formatted_sources = []
     for i, doc in enumerate(source_documents, 1):
-        # Get source file and page number from metadata
         source_file = doc.metadata.get("source_file", "Unknown")
         page_num = doc.metadata.get("page", "Unknown")
         content = doc.page_content[:200] + "..." if len(doc.page_content) > 200 else doc.page_content
@@ -32,21 +39,35 @@ def format_sources(source_documents):
     return formatted_sources
 
 
+def retrieve_documents(db, query: str, k: int = 6):
+    retriever = db.as_retriever(search_kwargs={"k": k})
+    return retriever.invoke(query)
+
+
 def split_docs(documents):
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=400,
-        chunk_overlap=150
+        chunk_size=800,
+        chunk_overlap=200
     )
     return splitter.split_documents(documents)
+
+
+def get_chroma_client(persist_directory: str = "db/chroma_db"):
+    """Create a Chroma client with persistent local storage."""
+    os.makedirs(persist_directory, exist_ok=True)
+    settings = Settings(
+        persist_directory=persist_directory,
+        is_persistent=True,
+        anonymized_telemetry=True
+    )
+    return chromadb.Client(settings=settings)
 
 
 def create_vector_db(chunks):
     import urllib3
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     
-    # Fix SSL/TLS issue on Windows
     import ssl
-    import os
     os.environ['CURL_CA_BUNDLE'] = ''
     os.environ['REQUESTS_CA_BUNDLE'] = ''
     
@@ -58,18 +79,21 @@ def create_vector_db(chunks):
         ssl._create_default_https_context = _create_unverified_https_context
     
     embedding = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'},
-        encode_kwargs={'normalize_embeddings': True}
+    model_name=r"C:\Users\HOMEPC\.cache\huggingface\hub\models--sentence-transformers--all-MiniLM-L6-v2\snapshots\c9745ed1d9f207416be6d2e6f8de32d1f16199bf",
+    model_kwargs={'device': 'cpu'},
+    encode_kwargs={'normalize_embeddings': True}
     )
 
+    client = get_chroma_client("db/chroma_db")
     db = Chroma.from_documents(
         documents=chunks,
         embedding=embedding,
-        persist_directory="db/chroma_db"
+        persist_directory="db/chroma_db",
+        client=client
     )
 
     return db
+
 
 def load_vector_db():
     """Load saved vector store from disk — no PDF reading, no embedding"""
@@ -77,14 +101,16 @@ def load_vector_db():
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     embedding = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",
-        model_kwargs={'device': 'cpu'},
-        encode_kwargs={'normalize_embeddings': True}
+    model_name=r"C:\Users\HOMEPC\.cache\huggingface\hub\models--sentence-transformers--all-MiniLM-L6-v2\snapshots\c9745ed1d9f207416be6d2e6f8de32d1f16199bf",
+    model_kwargs={'device': 'cpu'},
+    encode_kwargs={'normalize_embeddings': True}
     )
 
+    client = get_chroma_client("db/chroma_db")
     db = Chroma(
         persist_directory="db/chroma_db",
-        embedding_function=embedding
+        embedding_function=embedding,
+        client=client
     )
     return db
 
@@ -102,7 +128,6 @@ def create_hybrid_retriever(chunks, db):
             bm25_docs = bm25_retriever.invoke(query)
             semantic_docs = semantic_retriever.invoke(query)
 
-            # combine + remove duplicates
             all_docs = bm25_docs + semantic_docs
 
             unique = []
@@ -121,17 +146,11 @@ def create_hybrid_retriever(chunks, db):
 
 def retrieve_context(db, query, k=3):
     docs = db.similarity_search(query, k=k)
-
     context = "\n\n".join([doc.page_content for doc in docs])
-
     return context
 
 
 def rewrite_query(original_query: str, llm) -> list:
-    """
-    Generate multiple variations of the query to improve retrieval.
-    Returns a list of query variations.
-    """
     rewrite_prompt = PromptTemplate.from_template("""
 You are a query optimization expert. Generate 3 alternative ways to phrase this question to improve search results.
 
@@ -149,46 +168,34 @@ Keep each variation concise and clear.
     chain = rewrite_prompt | llm
     response = chain.invoke({"query": original_query})
     
-    # Parse the response to extract variations
     variations = []
     lines = response.split('\n')
     for line in lines:
         if line.strip() and any(line.strip().startswith(str(i)) for i in range(1, 4)):
-            # Clean the variation text
             cleaned = line.strip()
-            # Remove numbering (e.g., "1. " or "1) ")
             if cleaned[0].isdigit():
                 cleaned = cleaned.split('. ', 1)[-1] if '. ' in cleaned else cleaned.split(') ', 1)[-1]
             if cleaned:
                 variations.append(cleaned)
     
-    # Include original query
     all_queries = [original_query] + variations[:3]
-    return all_queries[:4]  # Return max 4 queries
+    return all_queries[:4]
 
 
 def retrieve_with_rewritten_queries(retriever, original_query: str, llm) -> list:
-    """
-    Retrieve documents using original query and rewritten variations.
-    Deduplicates and returns the best results.
-    """
-    # Get query variations
     query_variations = rewrite_query(original_query, llm)
     
-    # Retrieve documents for each variation
     all_docs = []
-    doc_ids = set()  # Track unique documents
+    doc_ids = set()
     
     for query in query_variations:
         docs = retriever.invoke(query)
         for doc in docs:
-            # Use content hash to deduplicate
             doc_id = hash(doc.page_content)
             if doc_id not in doc_ids:
                 all_docs.append(doc)
                 doc_ids.add(doc_id)
     
-    # Return top 7 unique documents
     return all_docs[:7]
 
 
@@ -208,18 +215,14 @@ def build_agent_based_qa(chunks, db):
     """Build an agent-based QA system with hybrid retrieval, query rewriting, and intelligent routing"""
     llm = load_model()
     
-    # Create hybrid retriever (BM25 + Semantic)
     retriever = create_hybrid_retriever(chunks, db)
     
-    # Define tools for the agent
     @tool
     def retrieve_from_documents(query: str) -> str:
         """Retrieve relevant information from the study documents using query rewriting"""
         try:
-            # Use query rewriting for better retrieval
             docs = retrieve_with_rewritten_queries(retriever, query, llm)
         except:
-            # Fallback to basic retrieval if rewriting fails
             docs = retriever.invoke(query)
         
         if not docs:
@@ -254,7 +257,6 @@ def build_agent_based_qa(chunks, db):
     
     tools = [retrieve_from_documents, search_multiple_sources, check_knowledge_limits]
     
-    # Create agent prompt
     agent_prompt = PromptTemplate.from_template("""
 You are SMARTSTUDY, an intelligent study assistant.
 
@@ -285,10 +287,8 @@ Question: {input}
 Thought:{agent_scratchpad}
 """)
     
-    # Create the agent
     agent = create_react_agent(llm, tools, agent_prompt)
     
-    # Create executor with memory
     memory = ConversationBufferMemory(
         memory_key="chat_history",
         return_messages=True
@@ -306,38 +306,67 @@ Thought:{agent_scratchpad}
 
 
 def build_retrieval_qa(db):
-    """
-    Stable production-grade RetrievalQA (NO AGENTS, NO TOOLS)
-    """
-
     llm = load_model()
 
-    retriever = db.as_retriever(search_kwargs={"k": 4})
+    retriever = db.as_retriever(search_kwargs={"k": 5})
 
-    prompt = PromptTemplate.from_template("""
-You are SMARTSTUDY, a Zimbabwean exam preparation tutor.
+    prompt = PromptTemplate.from_template("""You are SMARTSTUDY, a ZIMSEC tutor for Zimbabwean students.
 
-Use ONLY the provided context to answer the question.
-If the answer is not in the context, say:
-"I don't have enough information in the provided notes."
-
-Be clear, structured, and student-friendly.
+STRICT RULES:
+1. Read the context below carefully.
+2. Answer ONLY using information from the context.
+3. Do NOT use markdown. No **, no ##, no bullet symbols.
+4. Do NOT add disclaimers or say "as an AI".
+5. If the answer is not in the context, say exactly: Not found in notes.
+6. Write in plain sentences. 2 to 4 sentences maximum.
+7. Do not repeat the question back.
 
 Context:
 {context}
 
-Question:
-{question}
+Question: {question}
 
-Answer:
-""")
+Answer:""")
 
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         retriever=retriever,
         chain_type="stuff",
         return_source_documents=True,
+        verbose=False,
         chain_type_kwargs={"prompt": prompt}
     )
 
     return qa_chain, retriever
+
+
+def is_answer_grounded(answer: str) -> bool:
+    """Check if answer appears to be based on provided context rather than hallucinated"""
+    answer_lower = answer.lower()
+
+    hallucination_signals = [
+        "i think",
+        "i believe",
+        "generally speaking",
+        "typically",
+        "in general",
+        "usually",
+        "as far as i know",
+        "from my knowledge",
+        "i recall",
+        "i remember",
+        "based on my training",
+        "as an ai",
+    ]
+
+    for signal in hallucination_signals:
+        if signal in answer_lower:
+            return False
+
+    if len(answer.strip()) < 10:
+        return False
+
+    if "don't have information" in answer_lower or "not in my study materials" in answer_lower:
+        return True
+
+    return True

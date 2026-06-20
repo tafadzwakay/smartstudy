@@ -1,9 +1,9 @@
-from langchain.document_loaders import TextLoader
-from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import Chroma
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.llms import Ollama
-from langchain.chains import RetrievalQA
+from langchain_classic.document_loaders import TextLoader
+from langchain_classic.text_splitter import CharacterTextSplitter
+from langchain_classic.vectorstores import Chroma
+from langchain_classic.embeddings import HuggingFaceEmbeddings
+from langchain_classic.llms import Ollama
+from langchain_classic.chains import RetrievalQA
 
 system_prompt = """
 You are SMARTSTUDY, a strict Zimbabwean AI tutor.

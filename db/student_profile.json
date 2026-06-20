@@ -1,0 +1,34 @@
+{
+    "username": "guest",
+    "name": "Learner",
+    "grade": "Form 1",
+    "role": "student",
+    "preferred_style": "examples-first",
+    "subjects": {
+        "General": {
+            "confidence": 0.55,
+            "mistakes": 0
+        }
+    },
+    "recent_topics": [
+        "1.5% 1.5% 1.5% 1.5%"
+    ],
+    "activity": [
+        {
+            "question": "1.5% 1.5% 1.5% 1.5%",
+            "subject": "General",
+            "timestamp": "2026-06-01 01:14"
+        }
+    ],
+    "notes": [],
+    "quizzes": [],
+    "chat_sessions": [],
+    "badges": [
+        "Starter"
+    ],
+    "streak": 0,
+    "last_active": null,
+    "last_sync": null,
+    "pending_sync": 0,
+    "sync_history": []
+}
