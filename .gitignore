@@ -31,6 +31,7 @@ media/
 # ── Static Files (collected by collectstatic) ─────────────────
 staticfiles/
 static_root/
+static/
 
 # ── Database ──────────────────────────────────────────────────
 *.db
