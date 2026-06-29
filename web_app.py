@@ -145,10 +145,10 @@ def build_greeting_reply(text: str) -> str:
         time_greet = "Good night"
 
     if re.search(r'maswera|mhoro', text, re.IGNORECASE):
-        return f"Maswera! {time_greet}! I'm doing well, thank you 😊 What subject would you like to study today?"
+        return f"Maswera! {time_greet}! I'm doing well, thank you . What subject would you like to study today?"
     if re.search(r'sawubona', text, re.IGNORECASE):
-        return f"Sawubona! {time_greet}! I'm doing well, thank you 😊 What subject would you like to study today?"
-    return f"{time_greet}! I'm doing great, thanks for asking 😊 What subject would you like to study today?"
+        return f"Sawubona! {time_greet}! I'm doing well, thank you . What subject would you like to study today?"
+    return f"{time_greet}! I'm doing great, thanks for asking . What subject would you like to study today?"
 
 
 def is_cache_valid():
